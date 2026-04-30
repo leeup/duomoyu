@@ -72,61 +72,118 @@ def _to_int(v, default=0):
 
 
 # =========================================================================
+# 第三方聚合兜底 (imsyy → vvhan)
+# 直连失败时调用; Azure runner IP 也被风控的平台 (知乎/微博/抖音/虎扑) 主要靠这层
+# =========================================================================
+
+def _normalize_agg_item(it):
+    return {
+        "title": it.get("title") or it.get("name") or "",
+        "url": it.get("url") or it.get("mobileUrl") or it.get("mobile_url") or it.get("mobil_url") or "",
+        "hot": _to_int(it.get("hot") if it.get("hot") is not None else (it.get("heat") if it.get("heat") is not None else it.get("score"))),
+    }
+
+
+def aggregator_fallback(imsyy_id, vvhan_id, direct_err=None):
+    """imsyy → vvhan 二级兜底, 都失败抛异常 (会触发上层保留 last-good).
+    direct_err: 直连失败的原因, 会被合并进最终错误链, 方便定位是哪一层挂了."""
+    errors = [f"direct: {direct_err}"] if direct_err else []
+
+    # ① imsyy
+    try:
+        r = requests.get(f"https://api-hot.imsyy.top/{imsyy_id}", headers=_headers(), timeout=TIMEOUT)
+        r.raise_for_status()
+        j = r.json()
+        lst = j.get("data") if isinstance(j, dict) else None
+        if isinstance(lst, list) and lst:
+            return [_normalize_agg_item(it) for it in lst[:30] if it.get("title") or it.get("name")]
+        errors.append("imsyy: empty data")
+    except Exception as e:
+        errors.append(f"imsyy: {type(e).__name__}: {e}")
+
+    # ② vvhan
+    if vvhan_id:
+        try:
+            r = requests.get(f"https://api.vvhan.com/api/hotlist?type={vvhan_id}", headers=_headers(), timeout=TIMEOUT)
+            r.raise_for_status()
+            j = r.json()
+            lst = j.get("data") if isinstance(j, dict) else None
+            if isinstance(lst, list) and lst and j.get("success") is not False:
+                return [_normalize_agg_item(it) for it in lst[:30] if it.get("title") or it.get("name")]
+            errors.append("vvhan: empty data or success=false")
+        except Exception as e:
+            errors.append(f"vvhan: {type(e).__name__}: {e}")
+
+    raise RuntimeError(f"all sources failed [{imsyy_id}/{vvhan_id}] | {' | '.join(errors)}")
+
+
+# =========================================================================
 # 各平台抓取函数
 # 每个函数返回 list of {title, url, hot}, 失败时 raise Exception
 # =========================================================================
 
 def fetch_zhihu():
-    """知乎热榜 - 解析公开的 /billboard 页面里嵌的 JSON"""
-    r = requests.get(
-        "https://www.zhihu.com/billboard",
-        headers=_headers({"Referer": "https://www.zhihu.com/"}),
-        timeout=TIMEOUT,
-    )
-    r.raise_for_status()
-    m = re.search(r'<script id="js-initialData"[^>]*>(.*?)</script>', r.text, re.DOTALL)
-    if not m:
-        raise RuntimeError("zhihu: js-initialData not found")
-    j = json.loads(m.group(1))
-    lst = j.get("initialState", {}).get("topstory", {}).get("hotList", []) or []
-    items = []
-    for it in lst[:30]:
-        target = it.get("target") or {}
-        title = (target.get("titleArea") or {}).get("text") or ""
-        url = (target.get("link") or {}).get("url") or f"https://www.zhihu.com/question/{target.get('id', '')}"
-        hot = _to_int((target.get("metricsArea") or {}).get("text"))
-        if title:
-            items.append({"title": title, "url": url, "hot": hot})
-    if not items:
-        raise RuntimeError("zhihu: empty result after parse")
-    return items
+    """知乎热榜 - 直连 /billboard, 失败 fallback 到 imsyy/vvhan
+       注: Azure runner IP 被风控,Mac 家庭 IP 应该能直连"""
+    direct_err = None
+    try:
+        r = requests.get(
+            "https://www.zhihu.com/billboard",
+            headers=_headers({"Referer": "https://www.zhihu.com/"}),
+            timeout=TIMEOUT,
+        )
+        r.raise_for_status()
+        m = re.search(r'<script id="js-initialData"[^>]*>(.*?)</script>', r.text, re.DOTALL)
+        if not m:
+            raise RuntimeError("zhihu: js-initialData not found")
+        j = json.loads(m.group(1))
+        lst = j.get("initialState", {}).get("topstory", {}).get("hotList", []) or []
+        items = []
+        for it in lst[:30]:
+            target = it.get("target") or {}
+            title = (target.get("titleArea") or {}).get("text") or ""
+            url = (target.get("link") or {}).get("url") or f"https://www.zhihu.com/question/{target.get('id', '')}"
+            hot = _to_int((target.get("metricsArea") or {}).get("text"))
+            if title:
+                items.append({"title": title, "url": url, "hot": hot})
+        if not items:
+            raise RuntimeError("zhihu: empty result after parse")
+        return items
+    except Exception as e:
+        direct_err = f"{type(e).__name__}: {e}"
+    return aggregator_fallback("zhihu", "zhihuHot", direct_err)
 
 
 def fetch_weibo():
-    """微博热搜 - 移动端公开 API"""
-    container = "106003type=25&t=3&disable_hot=1&filter_type=realtimehot"
-    url = f"https://m.weibo.cn/api/container/getIndex?containerid={requests.utils.quote(container)}"
-    r = requests.get(
-        url,
-        headers=_headers({"Referer": "https://m.weibo.cn/", "MWeibo-Pwa": "1"}),
-        timeout=TIMEOUT,
-    )
-    r.raise_for_status()
-    j = r.json()
-    cards = (((j.get("data") or {}).get("cards") or [{}])[0].get("card_group")) or []
-    items = []
-    for it in cards[:30]:
-        title = it.get("desc") or ""
-        if not title:
-            continue
-        items.append({
-            "title": title,
-            "url": it.get("scheme") or f"https://s.weibo.com/weibo?q={requests.utils.quote(title)}",
-            "hot": _to_int(it.get("desc_extr")),
-        })
-    if not items:
-        raise RuntimeError("weibo: empty card_group")
-    return items
+    """微博热搜 - 直连 m.weibo.cn API, 失败 fallback"""
+    direct_err = None
+    try:
+        container = "106003type=25&t=3&disable_hot=1&filter_type=realtimehot"
+        url = f"https://m.weibo.cn/api/container/getIndex?containerid={requests.utils.quote(container)}"
+        r = requests.get(
+            url,
+            headers=_headers({"Referer": "https://m.weibo.cn/", "MWeibo-Pwa": "1"}),
+            timeout=TIMEOUT,
+        )
+        r.raise_for_status()
+        j = r.json()
+        cards = (((j.get("data") or {}).get("cards") or [{}])[0].get("card_group")) or []
+        items = []
+        for it in cards[:30]:
+            title = it.get("desc") or ""
+            if not title:
+                continue
+            items.append({
+                "title": title,
+                "url": it.get("scheme") or f"https://s.weibo.com/weibo?q={requests.utils.quote(title)}",
+                "hot": _to_int(it.get("desc_extr")),
+            })
+        if not items:
+            raise RuntimeError("weibo: empty card_group")
+        return items
+    except Exception as e:
+        direct_err = f"{type(e).__name__}: {e}"
+    return aggregator_fallback("weibo", "wbHot", direct_err)
 
 
 def fetch_v2ex():
@@ -172,10 +229,8 @@ def fetch_baidu():
 
 
 def fetch_douyin():
-    """抖音热点 - 官方 PC API (带签名,但简单签名版可拿到)"""
-    # 官方 API 需要 _signature; imsyy 镜像用的是 /aweme/v1/web/hot/search/list/ ?
-    # 简化处理: 直接 fail, 由 last-good / 兜底链接管
-    raise RuntimeError("douyin: 抖音 PC API 需要 _signature 签名,跳过直连")
+    """抖音热点 - PC API 需要 _signature 签名, 直接走聚合"""
+    return aggregator_fallback("douyin", "douyinHot")
 
 
 def fetch_bilibili():
@@ -225,8 +280,8 @@ def fetch_douban():
 
 
 def fetch_hupu():
-    """虎扑步行街 - 抓不动,直接抛错由兜底接管"""
-    raise RuntimeError("hupu: 直连未实现,等兜底链覆盖")
+    """虎扑步行街 - 没找到稳定的公开 API, 直接走聚合"""
+    return aggregator_fallback("hupu", "huPu")
 
 
 def fetch_toutiao():
@@ -280,33 +335,38 @@ def fetch_36kr():
 
 
 def fetch_ithome():
-    """IT 之家热榜 - m 站 HTML + 宽松正则"""
-    r = requests.get(
-        "https://m.ithome.com/rankm/",
-        headers=_headers({"Referer": "https://m.ithome.com/"}),
-        timeout=TIMEOUT,
-    )
-    r.raise_for_status()
-    items = []
-    seen = set()
-    for m in re.finditer(
-        r'<a[^>]+href="(https?://www\.ithome\.com/0/\d+/\d+\.htm)"[^>]*>(.*?)</a>',
-        r.text,
-        re.DOTALL,
-    ):
-        url, raw_title = m.group(1), m.group(2)
-        if url in seen:
-            continue
-        title = re.sub(r"<[^>]+>", "", raw_title)
-        title = re.sub(r"&[a-z#0-9]+;", " ", title).strip()
-        if title and 5 < len(title) < 200:
-            seen.add(url)
-            items.append({"title": title, "url": url, "hot": 25 - len(items)})
-        if len(items) >= 25:
-            break
-    if not items:
-        raise RuntimeError("ithome: HTML 解析 0 条")
-    return items
+    """IT 之家热榜 - 直连 m 站 HTML,失败 fallback (页面结构常变)"""
+    direct_err = None
+    try:
+        r = requests.get(
+            "https://m.ithome.com/rankm/",
+            headers=_headers({"Referer": "https://m.ithome.com/"}),
+            timeout=TIMEOUT,
+        )
+        r.raise_for_status()
+        items = []
+        seen = set()
+        for m in re.finditer(
+            r'<a[^>]+href="(https?://(?:www|m)\.ithome\.com/[^"]*?\d+(?:/\d+)?\.html?)"[^>]*>(.*?)</a>',
+            r.text,
+            re.DOTALL,
+        ):
+            url, raw_title = m.group(1), m.group(2)
+            if url in seen:
+                continue
+            title = re.sub(r"<[^>]+>", "", raw_title)
+            title = re.sub(r"&[a-z#0-9]+;", " ", title).strip()
+            if title and 5 < len(title) < 200:
+                seen.add(url)
+                items.append({"title": title, "url": url, "hot": 25 - len(items)})
+            if len(items) >= 25:
+                break
+        if not items:
+            raise RuntimeError("ithome: HTML 解析 0 条")
+        return items
+    except Exception as e:
+        direct_err = f"{type(e).__name__}: {e}"
+    return aggregator_fallback("ithome", "itHome", direct_err)
 
 
 def fetch_sspai():
