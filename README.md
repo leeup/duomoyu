@@ -70,6 +70,18 @@ GitHub Pages 提供静态访问 https://<user>.github.io/duomoyu/data.json
 前端 fetch 这个 URL 拿全部平台数据
 ```
 
+## 也可以本地手动推一次 (双轨)
+
+GitHub Action 在云端 5 分钟跑一次,如果你想立刻拿到一次更新(尤其是想**绕过 Azure IP 的反爬**,用家庭宽带抓数据),在 Mac 终端跑:
+
+```bash
+bash scripts/local-update.sh
+```
+
+脚本会:拉 CDN 上现有 `data.json` → 本地跑 `fetch.py` → force-push 到 `gh-pages` 分支。1-2 分钟后 Pages 上的 JSON 就刷新了。
+
+家庭 IP 的优势是反爬命中率几乎 100%,知乎/微博/B站 都能直连不走兜底。下一次 GH Action 跑时会拿你刚推的数据当 last-good 输入,所以即使 Action 抓不到的平台,数据也保留。
+
 ## 为什么这么设计
 
 国内主流站点(知乎/微博/B站)对 IP 反爬很激进,Cloudflare ASN 段几乎全被风控。GitHub Actions runner 的 Azure IP 池更大、影响面更广,反爬强度比 Cloudflare 低一档,因此成为最稳的数据源。
