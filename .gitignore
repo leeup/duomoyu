@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+._*
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# Node / Cloudflare Workers
+node_modules/
+.wrangler/
+worker/.wrangler/
+worker/node_modules/
+
+# 临时数据
+data.json
+
+# 迁移辅助脚本 (用过一次就行)
+copy_binaries.sh
+
+# IDE
+.vscode/
+.idea/
+*.swp

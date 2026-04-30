@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light" data-fontsize="m">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>多摸鱼 · 一站摸尽全网热榜</title>
+<style>
+  /* ============ Theme tokens ============ */
+  :root[data-theme="light"] {
+    --bg: #F4F6F8;
+    --card: #FFFFFF;
+    --card-hover: #FAFBFC;
+    --text: #1F2937;
+    --text-soft: #475569;
+    --muted: #94A3B8;
+    --border: #E5E7EB;
+    --accent: #1B98C7;
+    --accent-soft: #E0F2F7;
+    --accent-text: #0A6E8F;
+    --rank-hot: #E11D48;
+    --rank-warm: #F59E0B;
+    --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --header-bg: rgba(255,255,255,0.85);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1220;
+    --card: #161F33;
+    --card-hover: #1C2740;
+    --text: #E5E7EB;
+    --text-soft: #CBD5E1;
+    --muted: #64748B;
+    --border: #2A3651;
+    --accent: #5DC2E0;
+    --accent-soft: #173647;
+    --accent-text: #7DDCF4;
+    --rank-hot: #FB7185;
+    --rank-warm: #FBBF24;
+    --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    --header-bg: rgba(11,18,32,0.85);
+  }
+
+  :root[data-fontsize="s"] { --fs-base: 13px; --fs-title: 14px; }
+  :root[data-fontsize="m"] { --fs-base: 14px; --fs-title: 15px; }
+  :root[data-fontsize="l"] { --fs-base: 16px; --fs-title: 17px; }
+
+  /* ============ Reset ============ */
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    font-size: var(--fs-base);
+    line-height: 1.55;
+    transition: background-color .25s ease, color .25s ease;
+  }
+  a { color: inherit; text-decoration: none; }
+  button {
+    font: inherit; color: inherit; background: transparent;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 12px; cursor: pointer;
+    transition: all .15s ease;
+  }
+  button:hover { background: var(--card-hover); border-color: var(--accent); color: var(--accent-text); }
+  button.primary {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+  }
+  button.primary:hover { background: var(--accent-text); border-color: var(--accent-text); color: #fff; }
+
+  /* ============ Header ============ */
+  header.topbar {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 20px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 19px; font-weight: 700; letter-spacing: 0.3px;
+    color: var(--text);
+  }
+  .logo .fish { font-size: 22px; transform: translateY(-1px); }
+  .logo small {
+    font-size: 11px; color: var(--muted); font-weight: 400;
+    margin-left: 4px;
+  }
+  .spacer { flex: 1; }
+
+  .topbar nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .topbar nav .date {
+    color: var(--muted); font-size: 12px; padding-right: 6px;
+    border-right: 1px solid var(--border); margin-right: 4px;
+  }
+  .icon-btn {
+    width: 36px; height: 36px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+  .font-group { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .font-group button { border: none; border-radius: 0; padding: 6px 10px; }
+  .font-group button + button { border-left: 1px solid var(--border); }
+  .font-group button.active { background: var(--accent-soft); color: var(--accent-text); }
+
+  /* ============ Layout ============ */
+  main {
+    max-width: 1680px; margin: 0 auto; padding: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  /* ============ Card ============ */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover { box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08); }
+
+  .card-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+  }
+  .card-head .badge {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+  .card-head .name {
+    font-size: var(--fs-title); font-weight: 600; flex: 1; min-width: 0;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .card-head .count {
+    font-size: 11px; color: var(--muted); padding: 2px 8px;
+    background: var(--accent-soft); border-radius: 999px; color: var(--accent-text);
+  }
+  .card-head .refresh {
+    width: 28px; height: 28px; padding: 0; border: none;
+    color: var(--muted);
+  }
+  .card-head .refresh:hover { color: var(--accent); background: transparent; }
+  .card-head .refresh.spinning svg { animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .card-list {
+    list-style: none; margin: 0; padding: 6px 0;
+    overflow-y: auto; max-height: 460px;
+  }
+  .card-list li a {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    gap: 10px; align-items: baseline;
+    padding: 7px 16px;
+    color: var(--text-soft);
+    transition: background .12s ease, color .12s ease;
+  }
+  .card-list li a:hover { background: var(--card-hover); color: var(--accent-text); }
+  .card-list .rank {
+    font-weight: 700; font-size: 13px;
+    color: var(--muted); text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .card-list li:nth-child(1) .rank { color: var(--rank-hot); }
+  .card-list li:nth-child(2) .rank { color: var(--rank-hot); opacity: .85; }
+  .card-list li:nth-child(3) .rank { color: var(--rank-warm); }
+  .card-list .title {
+    font-size: var(--fs-base);
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .card-list .hot {
+    font-size: 11px; color: var(--muted); white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .card-foot {
+    padding: 8px 16px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .card-foot .live {
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .live::before {
+    content: ""; width: 6px; height: 6px; background: var(--rank-warm);
+    border-radius: 50%; display: inline-block;
+  }
+  .card-list .skeleton {
+    padding: 7px 16px; display: grid; grid-template-columns: 28px 1fr; gap: 10px;
+  }
+  .skeleton .bar { height: 12px; background: var(--border); border-radius: 4px; opacity: .5; animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:.4;} 50%{opacity:.7;} }
+
+  /* ============ Customize panel ============ */
+  .panel-mask {
+    position: fixed; inset: 0; background: rgba(15,23,42,0.4);
+    backdrop-filter: blur(2px);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease;
+    z-index: 80;
+  }
+  .panel-mask.open { opacity: 1; pointer-events: auto; }
+  aside.panel {
+    position: fixed; top: 0; right: 0; bottom: 0; width: 360px; max-width: 92vw;
+    background: var(--card); border-left: 1px solid var(--border);
+    transform: translateX(100%); transition: transform .25s ease;
+    z-index: 90; display: flex; flex-direction: column;
+    box-shadow: -8px 0 20px rgba(0,0,0,.08);
+  }
+  aside.panel.open { transform: translateX(0); }
+  .panel-head {
+    display: flex; align-items: center; padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-head h3 { margin: 0; font-size: 16px; flex: 1; }
+  .panel-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+  .panel-section { margin-bottom: 24px; }
+  .panel-section h4 {
+    margin: 0 0 10px; font-size: 12px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px; font-weight: 600;
+  }
+  .platform-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px; border-radius: 8px;
+    cursor: pointer;
+  }
+  .platform-row:hover { background: var(--card-hover); }
+  .platform-row .badge {
+    width: 24px; height: 24px; border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 12px;
+  }
+  .platform-row .name { flex: 1; }
+  .platform-row input { accent-color: var(--accent); }
+
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px dashed var(--border);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+
+  /* ============ Hero / footer ============ */
+  .hero {
+    grid-column: 1 / -1;
+    text-align: center; padding: 4px 8px 0; color: var(--muted); font-size: 12px;
+  }
+  footer {
+    text-align: center; padding: 28px 16px;
+    color: var(--muted); font-size: 12px;
+  }
+  footer .heart { color: var(--rank-hot); }
+
+  /* ============ Mobile ============ */
+  @media (max-width: 600px) {
+    header.topbar { padding: 10px 12px; gap: 8px; flex-wrap: wrap; }
+    .logo { font-size: 17px; }
+    .topbar nav .date { display: none; }
+    main { padding: 12px; gap: 12px; grid-template-columns: 1fr; }
+    .card-list { max-height: 380px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo">
+    <span class="fish">🐟</span>
+    <span>多摸鱼</span>
+    <small>一站摸尽全网热榜</small>
+  </div>
+  <span class="spacer"></span>
+  <nav>
+    <span class="date" id="date-display"></span>
+    <div class="font-group" role="group" aria-label="字号">
+      <button data-fs="s">A-</button>
+      <button data-fs="m" class="active">A</button>
+      <button data-fs="l">A+</button>
+    </div>
+    <button class="icon-btn" id="theme-toggle" title="切换主题">
+      <svg viewBox="0 0 24 24" id="theme-icon"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
+    </button>
+    <button class="icon-btn" id="refresh-all" title="全部刷新">
+      <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+    </button>
+    <button id="customize-btn" title="自定义">
+      <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;vertical-align:-3px;margin-right:4px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      自定义
+    </button>
+  </nav>
+</header>
+
+<main id="grid">
+  <div class="hero">
+    <span id="status-line">加载中,正在尝试接入实时数据……</span>
+  </div>
+</main>
+
+<div class="panel-mask" id="panel-mask"></div>
+<aside class="panel" id="panel" aria-hidden="true">
+  <div class="panel-head">
+    <h3>自定义</h3>
+    <button class="icon-btn" id="panel-close" title="关闭">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body">
+    <div class="panel-section">
+      <h4>显示平台</h4>
+      <div id="platform-list"></div>
+    </div>
+    <div class="panel-section">
+      <h4>偏好</h4>
+      <div class="toggle-row">
+        <span>自动刷新（5 分钟）</span>
+        <input type="checkbox" id="auto-refresh">
+      </div>
+      <div class="toggle-row">
+        <span>显示热度数值</span>
+        <input type="checkbox" id="show-hot" checked>
+      </div>
+      <div class="toggle-row">
+        <span>使用实时 API</span>
+        <input type="checkbox" id="use-live" checked>
+      </div>
+    </div>
+    <div class="panel-section">
+      <h4>自定义 Worker URL（最高优先级）</h4>
+      <p style="color:var(--muted);font-size:11px;margin:0 0 8px;line-height:1.6;">
+        部署 <code>worker/worker.js</code> 到 Cloudflare Workers 后，把 URL 填这里（如 <code>https://xxx.workers.dev</code>）。前端会优先用此源,稳定独立无需第三方。
+      </p>
+      <input type="text" id="worker-url" placeholder="https://xxx.workers.dev"
+        style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:13px;font-family:monospace">
+      <div style="margin-top:8px;display:flex;gap:6px;">
+        <button id="worker-save" class="primary" style="flex:1">保存</button>
+        <button id="worker-test">测试</button>
+        <button id="worker-clear">清除</button>
+      </div>
+      <div id="worker-status" style="margin-top:8px;font-size:11px;color:var(--muted);min-height:1.4em;"></div>
+    </div>
+    <div class="panel-section">
+      <h4>关于</h4>
+      <p style="color:var(--muted);font-size:12px;margin:0;line-height:1.7;">
+        多摸鱼 · 聚合全网热榜的极简工具，参考 momoyu.cc 复刻。<br><br>
+        <b>数据源（按优先级）：</b><br>
+        ⭐⭐ <b>GitHub Action 静态 JSON</b>（最稳,GitHub Pages 提供）<br>
+        ⭐ <b>自部署 Cloudflare Worker</b>（自带兜底链）<br>
+        ⓪ 本地代理 <code>serve.py</code><br>
+        ① <code>api-hot.imsyy.top</code> 直连<br>
+        ② <code>api.vvhan.com</code> fetch / JSONP<br>
+        ③ 内置样例数据兜底<br><br>
+        <b>部署 Worker（5 分钟）：</b>看 <code>worker/部署.md</code><br><br>
+        <b>启动本地代理：</b><br>
+        <code>python3 serve.py</code>（加 <code>-v</code> 看响应体预览）<br>
+        然后访问 <code>http://localhost:8000/多摸鱼.html</code><br><br>
+        <b>诊断（实时数据失败时）：</b><br>
+        🩺 <code>/api/health</code> — DNS / 网络自检<br>
+        🔬 <code>/api/debug/zhihu</code> — 逐源探测,返回 HTTP 状态、耗时、错误分类、响应体预览<br><br>
+        每张卡右下角会显示具体命中的数据源（如 <code>实时 · proxy(imsyy)</code>）。
+      </p>
+    </div>
+  </div>
+</aside>
+
+<footer>
+  <span>Made with <span class="heart">♥</span> · 多摸鱼 · 数据仅供参考，点击跳转原站</span>
+</footer>
+
+<script>
+/* =====================================================================
+   多摸鱼 · 单文件复刻
+   - 12 平台聚合，自动刷新，主题/字号/卡片可配置
+   - 优先调用 vvhan 公开 API；失败则使用内置 mock
+   ===================================================================== */
+
+// id 是内部 key (用于缓存/mock 索引)
+// imsyy: api-hot.imsyy.top 的接口名 (优先,CORS 友好)
+// vvhan: api.vvhan.com 的接口名 (JSONP 兜底,解决 file:// CORS)
+const PLATFORMS = [
+  { id: 'zhihuHot', name: '知乎热榜',   icon: '知', color: '#0084FF', imsyy: 'zhihu',        vvhan: 'zhihuHot',  src: 'https://www.zhihu.com/hot' },
+  { id: 'wbHot',    name: '微博热搜',   icon: '微', color: '#E6162D', imsyy: 'weibo',        vvhan: 'wbHot',     src: 'https://s.weibo.com/top/summary' },
+  { id: 'v2ex',     name: 'V2EX',      icon: 'V', color: '#1F1F1F',  imsyy: 'v2ex',         vvhan: 'v2ex',      src: 'https://www.v2ex.com/' },
+  { id: 'baiduRY',  name: '百度热搜',   icon: '百', color: '#2932E1', imsyy: 'baidu',        vvhan: 'baiduRY',   src: 'https://top.baidu.com/board' },
+  { id: 'douyinHot',name: '抖音热点',   icon: '抖', color: '#000000', imsyy: 'douyin',       vvhan: 'douyinHot', src: 'https://www.douyin.com/hot' },
+  { id: 'bili',     name: 'B 站热门',   icon: 'B', color: '#00A1D6',  imsyy: 'bilibili',     vvhan: 'bili',      src: 'https://www.bilibili.com/v/popular/all' },
+  { id: 'douban',   name: '豆瓣新片',   icon: '豆', color: '#2F8C5C', imsyy: 'douban-movie', vvhan: 'douban',    src: 'https://movie.douban.com/' },
+  { id: 'huPu',     name: '虎扑步行街', icon: '虎', color: '#E6162D', imsyy: 'hupu',         vvhan: 'huPu',      src: 'https://bbs.hupu.com/all-gambia' },
+  { id: 'toutiao',  name: '今日头条',   icon: '头', color: '#F04142', imsyy: 'toutiao',      vvhan: 'toutiao',   src: 'https://www.toutiao.com/' },
+  { id: '36Ke',     name: '36 氪',     icon: '氪', color: '#0AAEAE',  imsyy: '36kr',         vvhan: '36Ke',      src: 'https://36kr.com/hot-list/catalog' },
+  { id: 'itHome',   name: 'IT 之家',    icon: 'I', color: '#CD0000', imsyy: 'ithome',       vvhan: 'itHome',    src: 'https://www.ithome.com/' },
+  { id: 'sspai',    name: '少数派',     icon: '派', color: '#D71A1B', imsyy: 'sspai',        vvhan: 'sspai',     src: 'https://sspai.com/' },
+];
+
+const MOCK = {
+  zhihuHot: [
+    ['如何看待 OpenAI 最新发布的 GPT-5 模型？', 5210000],
+    ['为什么越来越多年轻人开始选择「数字游民」生活？', 4180000],
+    ['35 岁危机真的存在吗？普通程序员该如何应对？', 3920000],
+    ['居家办公成为常态后，写字楼会消失吗？', 3540000],
+    ['比亚迪 2026 款新车发布会有哪些亮点？', 3120000],
+    ['月薪两万的程序员为什么还感觉不够花？', 2890000],
+    ['考公 vs 进大厂，2026 年应届生该怎么选？', 2650000],
+    ['如何评价《繁花》第二季的拍摄水准？', 2340000],
+    ['普通人如何抓住 AI 时代的第一波红利？', 2110000],
+    ['为什么瑞幸咖啡能在三年内开到 3 万家店？', 1980000],
+    ['面试时被 HR 问「你的缺点是什么」该怎么答？', 1820000],
+    ['深圳房价回调,现在是不是上车的好时机？', 1690000],
+    ['有哪些被严重低估的国产剧值得二刷？', 1530000],
+    ['年轻人开始流行「上班养生」是怎么回事？', 1420000],
+    ['一个人住的精致生活如何坚持下去？', 1310000],
+  ],
+  wbHot: [
+    ['周杰伦演唱会北京站官宣', 9870000],
+    ['李佳琦回应直播翻车事件', 8540000],
+    ['原神 5.0 大版本更新内容曝光', 7890000],
+    ['苹果 Vision Pro 国行版正式上市', 7210000],
+    ['赵丽颖新剧定档', 6580000],
+    ['高考志愿填报指南', 5990000],
+    ['国家发改委发布消费刺激新政策', 5430000],
+    ['川普访华行程公布', 4980000],
+    ['迪士尼乐园新区 6 月开业', 4520000],
+    ['马龙宣布退役', 4180000],
+    ['芒果台跨年阵容曝光', 3870000],
+    ['上海地铁 14 号线延长运营时间', 3540000],
+    ['樱花季限定饮品上线', 3210000],
+    ['抖音上线全屏弹幕', 2980000],
+    ['雷军直播间回应小米 SU8', 2750000],
+  ],
+  v2ex: [
+    ['大家都用什么 AI 编程助手？Cursor 还是 Copilot？', 412],
+    ['自建 NAS 一年体验报告：值不值得', 385],
+    ['月薪 3 万的程序员还应该跳槽吗？', 348],
+    ['出海做独立产品的 12 个月小结', 312],
+    ['推荐一个我用了两年的 markdown 编辑器', 287],
+    ['有没有适合开发者的中文搜索引擎？', 256],
+    ['给大家分享一个我自己写的命令行工具', 234],
+    ['终于把家里的网络全部 IPv6 化了', 218],
+    ['请教大家在用什么后台管理框架', 196],
+    ['关于 35 岁的程序员的几点感悟', 178],
+    ['Mac mini M4 上做开发机两个月感受', 162],
+    ['周末整理了一份独立开发者出海资料', 148],
+    ['有什么值得长期持有的副业方向？', 132],
+    ['工作三年想离职去读研,大家怎么看', 118],
+    ['你们公司的代码 review 流程是怎样的？', 104],
+  ],
+  baiduRY: [
+    ['国务院发布 2026 年经济工作部署', 4980000],
+    ['北京冬奥会场地利用情况通报', 4560000],
+    ['多地启动新一轮医保改革', 4120000],
+    ['长三角高铁网络再次扩容', 3870000],
+    ['国家发改委对民营经济出台新政', 3540000],
+    ['中美经贸高层对话新进展', 3210000],
+    ['清明小长假出行预测发布', 2980000],
+    ['新版个人所得税法解读', 2750000],
+    ['国务院推动平台经济健康发展', 2540000],
+    ['国家文物局公布最新考古成果', 2310000],
+    ['多省宣布最低工资标准上调', 2120000],
+    ['航天员太空授课直播预告', 1950000],
+    ['高校招生政策最新调整', 1810000],
+    ['国家网信办整治网络谣言', 1680000],
+    ['全国铁路调图正式实施', 1540000],
+  ],
+  douyinHot: [
+    ['张雪峰直播再次刷屏', 8210000],
+    ['川渝地区美食火上抖音', 7560000],
+    ['00 后辞职创业 vlog 火出圈', 6890000],
+    ['某网红婚礼现场全程直播', 6240000],
+    ['爆改老式四合院 vlog 系列', 5670000],
+    ['跨年夜烟花表演高清视频', 5120000],
+    ['李子柒新作品上线', 4680000],
+    ['大学生宿舍生活实拍', 4210000],
+    ['南方暴雪实拍现场', 3870000],
+    ['打工人下班路上的小确幸', 3450000],
+    ['三亚旅游攻略避坑指南', 3120000],
+    ['宝妈一天的真实生活', 2890000],
+    ['程序员的早晨七件事', 2650000],
+    ['上海一家小面馆爆火', 2410000],
+    ['一只柴犬的城市冒险', 2180000],
+  ],
+  bili: [
+    ['何同学最新视频：我做了一个跑分 NaN 的手机', 6210000],
+    ['老番茄上线新游戏视频', 5430000],
+    ['罗翔老师讲解新民法典修订', 4890000],
+    ['【鬼畜】丞相再被诸葛亮气活', 4320000],
+    ['我用 AI 还原了 100 年前的上海', 3870000],
+    ['一个人骑行环游中国的第 547 天', 3450000],
+    ['B 站独家：原神 5.0 完整剧情', 3120000],
+    ['硬核拆解：iPhone 17 内部结构', 2890000],
+    ['【纪录片】消失的胡同：北京口述史', 2650000],
+    ['小提琴版《青花瓷》原来这么好听', 2410000],
+    ['敬汉卿 30 天减重 30 斤实录', 2180000],
+    ['手工耿新作：能自动写作业的机器人', 1970000],
+    ['【4K 修复】1995 年春晚高清版', 1810000],
+    ['我把家装改造成了赛博朋克风', 1680000],
+    ['日本街头采访：你眼中的中国', 1540000],
+  ],
+  douban: [
+    ['《繁花 2》获得豆瓣年度评分 9.2', 142000],
+    ['韩国电影《寄生虫 2》豆瓣开分 8.7', 128000],
+    ['三体动画第二季正式上线', 116000],
+    ['漫威新片《银河护卫队 4》评分出炉', 105000],
+    ['日剧《最爱》豆瓣高分话题剧', 94000],
+    ['国产纪录片《风味人间 5》开播', 86000],
+    ['新海诚最新作品定档暑期', 78000],
+    ['《奥本海默》导演新作开机', 71000],
+    ['HBO 新剧《最后生还者 2》预告', 65000],
+    ['北京国际电影节片单公布', 59000],
+    ['豆瓣 2025 年度图书榜单', 53000],
+    ['Netflix 出品华语剧《天才计划》', 48000],
+    ['迪士尼真人版动画再翻车', 43000],
+    ['《沙丘 3》正式官宣开拍', 39000],
+    ['国产恐怖片《咒怨之家》上线', 35000],
+  ],
+  huPu: [
+    ['JR 们觉得现在哪辆 SUV 最值得买？', 12300],
+    ['库里宣布退役后会回母校教书', 11200],
+    ['男生身高 175 是不是真的尴尬？', 10100],
+    ['月薪两万在二线买房还现实吗？', 9200],
+    ['李宁新款球鞋是真香还是营销', 8400],
+    ['老婆突然让我赚钱我该怎么办', 7600],
+    ['NBA 季后赛预测：谁能进总决赛', 6900],
+    ['女朋友想要的生日礼物太离谱', 6200],
+    ['考研失败该不该再战一次', 5600],
+    ['JR 们都怎么处理工作中的内卷', 5100],
+    ['国足新帅人选大讨论', 4600],
+    ['网传某明星即将官宣', 4200],
+    ['雄鹿队 vs 凯尔特人本周大战', 3800],
+    ['地理位置好房子和大房子怎么选', 3400],
+    ['推荐一些值得 N 刷的港剧', 3000],
+  ],
+  toutiao: [
+    ['多地启动新一轮医保改革,看病更便宜', 3120000],
+    ['长三角高铁网络再扩容,京沪 4 小时', 2780000],
+    ['国家发改委发布消费刺激新政策', 2540000],
+    ['中央气象台发布大风蓝色预警', 2310000],
+    ['国务院推动平台经济健康发展', 2120000],
+    ['多省最低工资标准上调,各地差异大', 1950000],
+    ['养老金 2026 年继续上调,具体方案', 1810000],
+    ['国家文物局公布最新考古成果', 1680000],
+    ['新版个人所得税法解读', 1540000],
+    ['全国铁路调图正式实施', 1420000],
+    ['住建部出台房地产稳定新举措', 1310000],
+    ['中美经贸高层对话取得新进展', 1210000],
+    ['国家网信办整治网络谣言专项行动', 1110000],
+    ['全国研究生招生计划公布', 1010000],
+    ['新版车辆购置税减免政策', 920000],
+  ],
+  '36Ke': [
+    ['字节跳动据传将在 2027 年香港上市', 480000],
+    ['大模型创业公司估值集体回调', 420000],
+    ['SpaceX 中国版获批运营牌照', 380000],
+    ['美团下场做即时零售,与京东开战', 340000],
+    ['特斯拉 Robotaxi 计划落地上海', 310000],
+    ['理想 MEGA 销量回暖,改款车下半年', 280000],
+    ['小米汽车 SU8 Ultra 售价超预期', 250000],
+    ['国产 GPU 公司沐曦完成 D 轮', 220000],
+    ['抖音电商 GMV 突破 5 万亿', 200000],
+    ['蔚来 ET5 海外市场首战告捷', 180000],
+    ['百川智能完成新一轮 12 亿融资', 160000],
+    ['Apple Intelligence 进军中国市场', 145000],
+    ['Shein 美国 IPO 计划重启', 130000],
+    ['宁德时代海外建厂提速', 118000],
+    ['京东物流海外仓全球破百', 105000],
+  ],
+  itHome: [
+    ['苹果新款 MacBook Air M5 评测出炉', 218000],
+    ['鸿蒙 NEXT 5.0 正式版正在推送', 196000],
+    ['小米 SU8 Ultra 实拍图曝光', 178000],
+    ['英伟达 RTX 5090 国行版上市', 162000],
+    ['华为 Mate70 Pro+ 入网工信部', 148000],
+    ['微软 Surface Pro 11 中文官网开售', 134000],
+    ['三星 Galaxy S25 系列售价曝光', 122000],
+    ['OPPO Find X9 Pro 影像新机发布', 110000],
+    ['Steam Deck OLED 国行 6 月开售', 99000],
+    ['Win 11 24H2 重大更新即将推送', 89000],
+    ['vivo X110 Pro 影像旗舰官宣', 80000],
+    ['英特尔 Arrow Lake-S 性能跑分', 72000],
+    ['一加 13 Pro 即将国内发布', 65000],
+    ['大疆 Osmo Pocket 4 上手体验', 58000],
+    ['真我 GT 神 U 新机渲染图', 52000],
+  ],
+  sspai: [
+    ['这是我用过最干净的 macOS 启动器', 48000],
+    ['一文读懂 iOS 19 新增功能', 42000],
+    ['我的 2026 年生产力工具栈', 38000],
+    ['用 Obsidian 搭建第二大脑指南', 34000],
+    ['这台便携显示器真的改变了我的工作', 30000],
+    ['告别杂乱：iPad 整理的 8 个技巧', 27000],
+    ['Raycast 高级用法,让 Mac 起飞', 24000],
+    ['一个真正能管时间的日历 App', 21000],
+    ['M 系列芯片真的不需要 SSD 升级吗', 19000],
+    ['本地 LLM 用什么模型最划算', 17000],
+    ['每月只花 50 块,把家变成智能家居', 15000],
+    ['用 NotebookLM 整理读书笔记', 13500],
+    ['隐藏的 Apple 官方实用工具', 12000],
+    ['推荐 5 款不为人知的 Mac App', 10800],
+    ['告别订阅疲劳:这些 App 一次买断', 9700],
+  ],
+};
+
+// 数据源：可在此扩展更多镜像
+const SOURCES = {
+  imsyy: {
+    name: 'imsyy',
+    base: 'https://api-hot.imsyy.top',
+    // 备用镜像（如官方实例不可达可换）：'https://orz.ai/api/v1/dailynews', 'https://api.dailyhot.bclz.top'
+  },
+  vvhan: {
+    name: 'vvhan',
+    base: 'https://api.vvhan.com/api/hotlist',
+  },
+};
+
+/* ============ State ============ */
+// 数据源优先级: GH Action JSON > Cloudflare Worker > 本地代理 > imsyy 直连 > vvhan > JSONP > mock
+// GH Action JSON: GitHub Actions 每 5 分钟跑一次 fetch.py,推到 gh-pages branch,
+//                 由 GitHub Pages 提供静态访问。优势是稳定且不依赖任何在线服务。
+const DEFAULT_GH_PAGES_URL = 'https://leeup.github.io/duomoyu/data.json';
+const DEFAULT_WORKER_URL = 'https://duomoyu-hotlist.duomoyu.workers.dev';
+const STATE = {
+  hidden: new Set(JSON.parse(localStorage.getItem('mmy:hidden') || '[]')),
+  showHot: localStorage.getItem('mmy:showHot') !== '0',
+  useLive: localStorage.getItem('mmy:useLive') !== '0',
+  autoRefresh: localStorage.getItem('mmy:autoRefresh') === '1',
+  workerUrl: localStorage.getItem('mmy:workerUrl') ?? DEFAULT_WORKER_URL,
+  ghPagesUrl: localStorage.getItem('mmy:ghPagesUrl') ?? DEFAULT_GH_PAGES_URL,
+  ghPagesData: null,        // 整个 data.json 缓存到内存,所有平台共用一次请求
+  ghPagesLoadedAt: 0,       // 何时加载的, 用于"过期失效"判断
+  data: {},
+  fetchedAt: {},
+  liveOk: {},
+};
+// Worker 平台 id 映射 (前端用 vvhan 风格 id,Worker 用 imsyy 风格)
+const WORKER_ID_MAP = {
+  zhihuHot: 'zhihu', wbHot: 'weibo', v2ex: 'v2ex', baiduRY: 'baidu',
+  douyinHot: 'douyin', bili: 'bilibili', douban: 'douban', huPu: 'hupu',
+  toutiao: 'toutiao', '36Ke': '36kr', itHome: 'ithome', sspai: 'sspai',
+};
+const root = document.documentElement;
+const savedTheme = localStorage.getItem('mmy:theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+const savedFs    = localStorage.getItem('mmy:fontsize') || 'm';
+root.dataset.theme = savedTheme;
+root.dataset.fontsize = savedFs;
+document.querySelectorAll('.font-group button').forEach(b => b.classList.toggle('active', b.dataset.fs === savedFs));
+
+/* ============ Helpers ============ */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+const fmtHot = (n) => {
+  if (!n && n !== 0) return '';
+  if (n >= 100000000) return (n / 100000000).toFixed(1) + ' 亿';
+  if (n >= 10000)     return (n / 10000).toFixed(1) + ' 万';
+  if (n >= 1000)      return (n / 1000).toFixed(1) + ' k';
+  return String(n);
+};
+const fmtTime = (ts) => {
+  if (!ts) return '';
+  const diff = Math.floor((Date.now() - ts) / 60000);
+  if (diff < 1) return '刚刚';
+  if (diff < 60) return diff + ' 分钟前';
+  return Math.floor(diff / 60) + ' 小时前';
+};
+
+/* ============ Fetch (多源 + JSONP 兜底) ============ */
+function parseHot(v) {
+  if (v == null) return null;
+  if (typeof v === 'number') return v;
+  const s = String(v).trim();
+  // 处理 "1.2亿"、"3.4万" 等中文计数
+  let m = s.match(/^([\d.]+)\s*亿/); if (m) return Math.round(parseFloat(m[1]) * 1e8);
+  m = s.match(/^([\d.]+)\s*万/);   if (m) return Math.round(parseFloat(m[1]) * 1e4);
+  m = s.match(/^([\d.]+)\s*[kK]/); if (m) return Math.round(parseFloat(m[1]) * 1e3);
+  const n = Number(s.replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) ? n : null;
+}
+
+// 带超时的 fetch
+function fetchTimeout(url, ms = 6500) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { signal: ctrl.signal, mode: 'cors' })
+    .finally(() => clearTimeout(t));
+}
+
+// JSONP 注入式拉取 (绕过 CORS,适合 file:// 双击场景)
+function jsonp(url, callbackParam = 'callback', timeout = 7000) {
+  return new Promise((resolve, reject) => {
+    const cbName = '__mmy_jsonp_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
+    const sep = url.includes('?') ? '&' : '?';
+    const script = document.createElement('script');
+    const cleanup = () => {
+      try { delete window[cbName]; } catch (_) { window[cbName] = undefined; }
+      script.remove();
+    };
+    const t = setTimeout(() => { cleanup(); reject(new Error('jsonp timeout')); }, timeout);
+    window[cbName] = (data) => { clearTimeout(t); cleanup(); resolve(data); };
+    script.onerror = () => { clearTimeout(t); cleanup(); reject(new Error('jsonp script error')); };
+    script.src = url + sep + callbackParam + '=' + encodeURIComponent(cbName);
+    document.body.appendChild(script);
+  });
+}
+
+// 标准化 imsyy 响应 (注意:vvhan 返回的也含 success+data,所以这里只看 data 数组形态)
+function normalizeImsyy(j, p) {
+  if (!j || !Array.isArray(j.data) || !j.data.length) return null;
+  // vvhan 的条目里没有 mobileUrl 字段,而 imsyy 有;用第一条做粗略判断
+  const first = j.data[0] || {};
+  const looksLikeImsyy = ('mobileUrl' in first) || ('mobile_url' in first) || ('id' in first && !('mobil_url' in first));
+  if (!looksLikeImsyy && j.success) return null; // 形态像 vvhan,交给 normalizeVvhan
+  return j.data.slice(0, 15).map(it => ({
+    title: it.title || it.name || '',
+    url: it.url || it.mobileUrl || it.mobile_url || p.src,
+    hot: parseHot(it.hot ?? it.heat ?? it.score),
+  })).filter(x => x.title);
+}
+
+// 标准化 vvhan 响应
+function normalizeVvhan(j, p) {
+  if (!j || !j.success || !Array.isArray(j.data)) return null;
+  return j.data.slice(0, 15).map(it => ({
+    title: it.title || it.name || '',
+    url: it.url || it.mobil_url || it.mobile_url || p.src,
+    hot: parseHot(it.hot ?? it.heat ?? it.score),
+  })).filter(x => x.title);
+}
+
+// 是否运行在本地代理上 (serve.py)
+const ON_PROXY = /^https?:$/.test(location.protocol)
+                 && /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+
+// ⭐⭐ 加载 GitHub Pages 上的静态 JSON (整个 data.json 一次拉,所有平台共用)
+// 这一档不会自己重试,失败就 STATE.ghPagesData 保持 null,后续平台自然走 Worker / 代理 / 直连兜底
+async function loadGhPagesData() {
+  if (!STATE.ghPagesUrl) return;
+  // 5 分钟内已加载过的就不再请求 (Action 每 5 分钟更新一次,再频繁请求也没用)
+  if (STATE.ghPagesData && Date.now() - STATE.ghPagesLoadedAt < 5 * 60 * 1000) return;
+  try {
+    const r = await fetchTimeout(STATE.ghPagesUrl, 9000);
+    if (r.ok) {
+      const j = await r.json();
+      if (j && j.platforms && typeof j.platforms === 'object') {
+        STATE.ghPagesData = j;
+        STATE.ghPagesLoadedAt = Date.now();
+        console.log('[gh-pages] loaded', Object.keys(j.platforms).length, 'platforms, updated_at=', j.updated_at);
+      }
+    }
+  } catch (e) {
+    console.warn('[gh-pages] load failed:', e.message);
+  }
+}
+
+async function fetchPlatform(p) {
+  if (!STATE.useLive) {
+    STATE.liveOk[p.id] = false;
+    return (MOCK[p.id] || []).map(([title, hot]) => ({ title, url: p.src, hot }));
+  }
+
+  // ⭐⭐ 最高优先级:GitHub Pages 静态 JSON (Action 每 5 分钟更新)
+  if (STATE.ghPagesData?.platforms) {
+    const ghId = WORKER_ID_MAP[p.id] || p.id;
+    const entry = STATE.ghPagesData.platforms[ghId];
+    if (entry?.items?.length) {
+      STATE.liveOk[p.id] = 'gh-action';
+      return entry.items.slice(0, 15).map(it => ({
+        title: it.title, url: it.url || p.src,
+        hot: parseHot(it.hot ?? it.heat ?? it.score),
+      })).filter(x => x.title);
+    }
+  }
+
+  // ⭐ 第二优先级:用户自部署的 Cloudflare Worker
+  if (STATE.workerUrl) {
+    const workerId = WORKER_ID_MAP[p.id] || p.id;
+    try {
+      const url = STATE.workerUrl.replace(/\/+$/, '') + '/api/' + workerId;
+      const r = await fetchTimeout(url, 9000);
+      if (r.ok) {
+        const j = await r.json();
+        if (j && Array.isArray(j.data) && j.data.length) {
+          STATE.liveOk[p.id] = 'worker';
+          return j.data.slice(0, 15).map(it => ({
+            title: it.title, url: it.url || p.src,
+            hot: parseHot(it.hot ?? it.heat ?? it.score),
+          })).filter(x => x.title);
+        }
+      }
+    } catch (e) { console.warn(`[${p.id}] worker failed:`, e.message); }
+  }
+
+  // ⓪ 本地代理 /api/auto/* (serve.py)
+  if (ON_PROXY) {
+    try {
+      const r = await fetchTimeout(`/api/auto/${p.id}`, 9000);
+      if (r.ok) {
+        const used = r.headers.get('X-Source') || 'proxy';
+        const j = await r.json();
+        // 代理统一返回 imsyy 或 vvhan 原始格式,标准化两次都试
+        const list = normalizeImsyy(j, p) || normalizeVvhan(j, p);
+        if (list && list.length) {
+          STATE.liveOk[p.id] = `proxy(${used})`;
+          return list;
+        }
+      }
+    } catch (e) { console.warn(`[${p.id}] proxy failed:`, e.message); }
+  }
+
+  // ① 主源:imsyy (CORS 友好,文件协议下也工作)
+  if (p.imsyy) {
+    try {
+      const r = await fetchTimeout(`${SOURCES.imsyy.base}/${p.imsyy}`);
+      if (r.ok) {
+        const list = normalizeImsyy(await r.json(), p);
+        if (list && list.length) {
+          STATE.liveOk[p.id] = 'imsyy';
+          return list;
+        }
+      }
+    } catch (e) { console.warn(`[${p.id}] imsyy fetch failed:`, e.message); }
+  }
+
+  // ② 兜底:vvhan via fetch
+  if (p.vvhan) {
+    try {
+      const r = await fetchTimeout(`${SOURCES.vvhan.base}?type=${p.vvhan}`);
+      if (r.ok) {
+        const list = normalizeVvhan(await r.json(), p);
+        if (list && list.length) {
+          STATE.liveOk[p.id] = 'vvhan';
+          return list;
+        }
+      }
+    } catch (e) { console.warn(`[${p.id}] vvhan fetch failed:`, e.message); }
+  }
+
+  // ③ 终极兜底:vvhan via JSONP (适合 file:// 协议或严格 CORS)
+  if (p.vvhan) {
+    try {
+      const j = await jsonp(`${SOURCES.vvhan.base}?type=${p.vvhan}`);
+      const list = normalizeVvhan(j, p);
+      if (list && list.length) {
+        STATE.liveOk[p.id] = 'vvhan-jsonp';
+        return list;
+      }
+    } catch (e) { console.warn(`[${p.id}] vvhan jsonp failed:`, e.message); }
+  }
+
+  // ④ 全部失败 → mock
+  STATE.liveOk[p.id] = false;
+  return (MOCK[p.id] || []).map(([title, hot]) => ({ title, url: p.src, hot }));
+}
+
+/* ============ Render ============ */
+function renderCard(p) {
+  const id = 'card-' + p.id;
+  let card = document.getElementById(id);
+  if (!card) {
+    card = document.createElement('section');
+    card.id = id;
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-head">
+        <span class="badge" style="background:${p.color}">${p.icon}</span>
+        <span class="name">${p.name}</span>
+        <span class="count" data-role="count">--</span>
+        <button class="refresh" title="刷新此卡">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
+        </button>
+      </div>
+      <ul class="card-list" data-role="list">
+        ${'<li class="skeleton"><div class="bar" style="width:60%"></div><div class="bar"></div></li>'.repeat(8)}
+      </ul>
+      <div class="card-foot">
+        <span data-role="time">加载中…</span>
+        <span class="live" data-role="src">数据来源</span>
+      </div>
+    `;
+    card.querySelector('.refresh').addEventListener('click', () => loadAndRender(p, true));
+    $('#grid').appendChild(card);
+  }
+  const list  = card.querySelector('[data-role="list"]');
+  const items = STATE.data[p.id] || [];
+  const count = card.querySelector('[data-role="count"]');
+  const time  = card.querySelector('[data-role="time"]');
+  const src   = card.querySelector('[data-role="src"]');
+  count.textContent = items.length ? `TOP ${items.length}` : '--';
+  list.innerHTML = items.map((it, i) => `
+    <li>
+      <a href="${it.url || p.src}" target="_blank" rel="noopener noreferrer">
+        <span class="rank">${i + 1}</span>
+        <span class="title">${escapeHtml(it.title)}</span>
+        ${STATE.showHot && it.hot ? `<span class="hot">${fmtHot(it.hot)}</span>` : ''}
+      </a>
+    </li>
+  `).join('') || '<li style="padding:24px 16px;color:var(--muted);text-align:center">暂无数据</li>';
+  time.textContent = '更新于 ' + fmtTime(STATE.fetchedAt[p.id]);
+  const ok = STATE.liveOk[p.id];
+  src.textContent = ok === 'gh-action' ? '实时 · GH Action ⭐⭐'
+                   : ok === 'worker' ? '实时 · Worker ⭐'
+                   : (typeof ok === 'string' && ok.startsWith('proxy')) ? `实时 · ${ok}`
+                   : ok === 'imsyy' ? '实时 · imsyy'
+                   : ok === 'vvhan' ? '实时 · vvhan'
+                   : ok === 'vvhan-jsonp' ? '实时 · vvhan(JSONP)'
+                   : '样例数据';
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
+}
+
+async function loadAndRender(p, isManual = false) {
+  const card = document.getElementById('card-' + p.id);
+  const refresh = card?.querySelector('.refresh');
+  if (refresh) refresh.classList.add('spinning');
+  try {
+    STATE.data[p.id] = await fetchPlatform(p);
+    STATE.fetchedAt[p.id] = Date.now();
+  } finally {
+    renderCard(p);
+    if (refresh) refresh.classList.remove('spinning');
+    if (isManual) toast(`已更新「${p.name}」`);
+  }
+}
+
+function renderAll() {
+  $('#grid').querySelectorAll('.card').forEach(n => n.remove());
+  PLATFORMS.filter(p => !STATE.hidden.has(p.id)).forEach(p => loadAndRender(p));
+}
+
+function setStatus(text) {
+  const s = $('#status-line');
+  if (s) s.textContent = text;
+}
+
+/* ============ Toast ============ */
+let toastT;
+function toast(msg) {
+  let t = $('#toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    Object.assign(t.style, {
+      position: 'fixed', bottom: '24px', left: '50%',
+      transform: 'translateX(-50%)',
+      background: 'var(--card)', color: 'var(--text)',
+      border: '1px solid var(--border)', borderRadius: '12px',
+      padding: '10px 18px', boxShadow: 'var(--shadow)',
+      zIndex: 200, fontSize: '13px',
+      opacity: '0', transition: 'opacity .15s ease',
+    });
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(toastT);
+  toastT = setTimeout(() => { t.style.opacity = '0'; }, 1800);
+}
+
+/* ============ Customize panel ============ */
+function buildPanel() {
+  const list = $('#platform-list');
+  list.innerHTML = PLATFORMS.map(p => `
+    <label class="platform-row">
+      <span class="badge" style="background:${p.color}">${p.icon}</span>
+      <span class="name">${p.name}</span>
+      <input type="checkbox" data-pid="${p.id}" ${STATE.hidden.has(p.id) ? '' : 'checked'}>
+    </label>
+  `).join('');
+  list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', e => {
+      const pid = e.target.dataset.pid;
+      if (e.target.checked) STATE.hidden.delete(pid);
+      else STATE.hidden.add(pid);
+      localStorage.setItem('mmy:hidden', JSON.stringify([...STATE.hidden]));
+      renderAll();
+    });
+  });
+  $('#auto-refresh').checked = STATE.autoRefresh;
+  $('#show-hot').checked = STATE.showHot;
+  $('#use-live').checked = STATE.useLive;
+  $('#worker-url').value = STATE.workerUrl;
+  if (!STATE.workerUrl) {
+    $('#worker-status').textContent = '未配置 (将走代理 / 直连 / 样例 兜底链)';
+  } else if (STATE.workerUrl === DEFAULT_WORKER_URL) {
+    $('#worker-status').textContent = `当前: ${STATE.workerUrl}  (默认)`;
+  } else {
+    $('#worker-status').textContent = `当前: ${STATE.workerUrl}  (自定义)`;
+  }
+}
+
+function bindWorkerHandlers() {
+  $('#worker-save').addEventListener('click', () => {
+    const v = $('#worker-url').value.trim().replace(/\/+$/, '');
+    STATE.workerUrl = v;
+    if (v) localStorage.setItem('mmy:workerUrl', v);
+    else localStorage.removeItem('mmy:workerUrl');
+    $('#worker-status').textContent = v ? `已保存: ${v}` : '已清除';
+    toast(v ? '已保存,正在用 Worker 重新加载' : '已清除 Worker URL');
+    renderAll();
+  });
+  $('#worker-clear').addEventListener('click', () => {
+    $('#worker-url').value = '';
+    STATE.workerUrl = '';
+    // 持久化空值,避免下次加载又被 DEFAULT_WORKER_URL 覆盖
+    localStorage.setItem('mmy:workerUrl', '');
+    $('#worker-status').textContent = '已清除 (将走代理 / 直连 / 样例 兜底链)';
+    toast('已清除 Worker URL');
+    renderAll();
+  });
+  $('#worker-test').addEventListener('click', async () => {
+    const v = $('#worker-url').value.trim().replace(/\/+$/, '');
+    if (!v) { $('#worker-status').textContent = '请先填入 Worker URL'; return; }
+    $('#worker-status').textContent = '测试中…';
+    try {
+      const t0 = Date.now();
+      const r = await fetchTimeout(v + '/api/v2ex', 9000);
+      const ms = Date.now() - t0;
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const j = await r.json();
+      if (Array.isArray(j.data) && j.data.length) {
+        $('#worker-status').innerHTML = `<span style="color:#10b981">✓ 成功 [${ms}ms] 拿到 ${j.data.length} 条 V2EX 数据</span>`;
+      } else {
+        $('#worker-status').innerHTML = `<span style="color:#f59e0b">⚠ 响应正常但无数据,response: ${JSON.stringify(j).slice(0,100)}</span>`;
+      }
+    } catch (e) {
+      $('#worker-status').innerHTML = `<span style="color:#ef4444">✗ 失败: ${e.message}</span>`;
+    }
+  });
+}
+
+function openPanel() {
+  buildPanel();
+  $('#panel').classList.add('open');
+  $('#panel-mask').classList.add('open');
+}
+function closePanel() {
+  $('#panel').classList.remove('open');
+  $('#panel-mask').classList.remove('open');
+}
+
+/* ============ Theme & Font ============ */
+function setTheme(t) {
+  root.dataset.theme = t;
+  localStorage.setItem('mmy:theme', t);
+  // 切换月亮/太阳图标
+  const ic = $('#theme-icon');
+  if (t === 'dark') {
+    ic.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  } else {
+    ic.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/>';
+  }
+}
+function setFont(s) {
+  root.dataset.fontsize = s;
+  localStorage.setItem('mmy:fontsize', s);
+  $$('.font-group button').forEach(b => b.classList.toggle('active', b.dataset.fs === s));
+}
+
+/* ============ Date display ============ */
+function setDate() {
+  const d = new Date();
+  const days = ['日','一','二','三','四','五','六'];
+  $('#date-display').textContent = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} 周${days[d.getDay()]}`;
+}
+
+/* ============ Auto refresh ============ */
+let autoTimer;
+function setupAutoRefresh() {
+  clearInterval(autoTimer);
+  if (STATE.autoRefresh) {
+    autoTimer = setInterval(() => {
+      PLATFORMS.filter(p => !STATE.hidden.has(p.id)).forEach(p => loadAndRender(p));
+    }, 5 * 60 * 1000);
+  }
+}
+
+/* ============ Init ============ */
+function init() {
+  setDate();
+  setTheme(savedTheme);
+  setFont(savedFs);
+  $('#theme-toggle').addEventListener('click', () => setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark'));
+  $('#refresh-all').addEventListener('click', () => { renderAll(); toast('已刷新全部'); });
+  $('#customize-btn').addEventListener('click', openPanel);
+  $('#panel-close').addEventListener('click', closePanel);
+  $('#panel-mask').addEventListener('click', closePanel);
+  $$('.font-group button').forEach(b => b.addEventListener('click', () => setFont(b.dataset.fs)));
+  $('#auto-refresh').addEventListener('change', e => {
+    STATE.autoRefresh = e.target.checked;
+    localStorage.setItem('mmy:autoRefresh', e.target.checked ? '1' : '0');
+    setupAutoRefresh();
+    toast(e.target.checked ? '已开启 5 分钟自动刷新' : '已关闭自动刷新');
+  });
+  $('#show-hot').addEventListener('change', e => {
+    STATE.showHot = e.target.checked;
+    localStorage.setItem('mmy:showHot', e.target.checked ? '1' : '0');
+    PLATFORMS.forEach(p => { if (!STATE.hidden.has(p.id)) renderCard(p); });
+  });
+  $('#use-live').addEventListener('change', e => {
+    STATE.useLive = e.target.checked;
+    localStorage.setItem('mmy:useLive', e.target.checked ? '1' : '0');
+    renderAll();
+    toast(e.target.checked ? '已切换至实时数据' : '已切换至样例数据');
+  });
+  // 绑定一次 Worker URL 相关按钮 (面板复用同一组 DOM)
+  bindWorkerHandlers();
+
+  // 渲染主页面
+  setStatus('正在加载……');
+  // 先并行拉 GH Pages JSON (一次拿到所有平台,最稳的数据源),
+  // 拉到了 renderAll 时各卡片会优先用它;没拉到也不阻塞,渲染时会走 Worker / 兜底链
+  loadGhPagesData().finally(() => {
+    renderAll();
+    setupAutoRefresh();
+    // 等大部分卡片渲染完,再总结一句状态文字
+    setTimeout(() => {
+      const total = PLATFORMS.filter(p => !STATE.hidden.has(p.id)).length;
+      const okEntries = Object.entries(STATE.liveOk).filter(([, v]) => v);
+      const live = okEntries.length;
+      const ghCount = okEntries.filter(([, v]) => v === 'gh-action').length;
+      const isFile = location.protocol === 'file:';
+      if (live === 0) {
+        if (isFile) {
+          setStatus(`实时 API 全部被浏览器拦截。在文件所在目录运行 python3 serve.py,然后访问 http://localhost:8000/多摸鱼.html。`);
+        } else if (ON_PROXY) {
+          setStatus(`本地代理已就位但所有上游均失败。打开 ${location.origin}/api/health 看 DNS 自检, ${location.origin}/api/debug/zhihu 看完整诊断。展示 ${total} 个平台样例数据。`);
+        } else {
+          setStatus(`实时数据源不可达,展示 ${total} 个平台样例数据。`);
+        }
+      } else if (live < total) {
+        const note = ghCount ? ` (其中 ${ghCount} 个来自 GH Action 静态 JSON)` : '';
+        setStatus(`已加载 ${total} 个平台,${live} 个为实时数据,${total - live} 个使用样例数据兜底${note}`);
+      } else {
+        const note = ghCount === total ? ' (全部来自 GH Action ⭐⭐)' : (ghCount ? ` (${ghCount} 个来自 GH Action,其余走 Worker / 直连)` : '');
+        setStatus(`✓ 已加载 ${total} 个平台,全部为实时数据${note}`);
+      }
+    }, 2500);
+  });
+}
+
+init();
+</script>
+</body>
+</html>

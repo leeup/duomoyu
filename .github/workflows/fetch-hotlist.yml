@@ -1,0 +1,87 @@
+name: fetch-hotlist
+
+on:
+  # 每 5 分钟跑一次
+  schedule:
+    - cron: '*/5 * * * *'
+  # 手动触发 (点 Actions 标签 → Run workflow)
+  workflow_dispatch:
+  # 改动 fetch.py 时也跑一次,验证脚本没坏
+  push:
+    paths:
+      - 'scripts/fetch.py'
+      - '.github/workflows/fetch-hotlist.yml'
+
+# 只允许 contents:write 提交到 gh-pages 分支
+permissions:
+  contents: write
+
+# 防止两个并发 run 同时推 gh-pages 引发冲突
+concurrency:
+  group: fetch-hotlist
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout (main)
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: pip install requests
+
+      - name: Pull last-good data.json from gh-pages
+        run: |
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          REPO="${GITHUB_REPOSITORY##*/}"
+          PAGES_URL="https://${OWNER}.github.io/${REPO}/data.json"
+          echo "Trying $PAGES_URL"
+          if curl -fsSL --max-time 20 "$PAGES_URL" -o data.json; then
+            echo "✓ pulled existing data.json ($(wc -c < data.json) bytes)"
+          else
+            echo "⚠ no existing data.json, starting fresh"
+            echo '{"platforms":{}}' > data.json
+          fi
+
+      - name: Run fetch.py
+        run: python scripts/fetch.py --input data.json --output data.json
+        # 即使部分平台失败也别让 step fail (last-good 已经处理了)
+        continue-on-error: false
+
+      - name: Prepare publish dir
+        run: |
+          mkdir -p _publish
+          cp data.json _publish/
+          # 顺便放个简单 index.html 方便人手查看
+          cat > _publish/index.html <<'EOF'
+          <!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><title>多摸鱼 · 数据</title>
+          <style>body{font-family:-apple-system,sans-serif;max-width:600px;margin:48px auto;padding:0 24px;line-height:1.7}
+          code{background:#f4f6f8;padding:2px 6px;border-radius:4px}
+          a{color:#1b98c7}</style></head><body>
+          <h1>🐟 多摸鱼 · 静态数据</h1>
+          <p>由 GitHub Actions 每 5 分钟更新一次</p>
+          <ul>
+            <li><a href="data.json">data.json</a> — 12 个平台聚合数据 (JSON)</li>
+          </ul>
+          <p><a href="https://github.com/leeup/duomoyu">查看源码</a></p>
+          </body></html>
+          EOF
+
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./_publish
+          publish_branch: gh-pages
+          # force_orphan 让 gh-pages 每次都是单 commit, 避免历史膨胀
+          force_orphan: true
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'auto: refresh hotlist data'
