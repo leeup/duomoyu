@@ -21,6 +21,11 @@ concurrency:
   group: fetch-hotlist
   cancel-in-progress: false
 
+# 直接 opt-in 到 Node.js 24 跑 actions, 消除 Node 20 弃用警告.
+# (GitHub 公告: Node 20 将在 2026-06-02 默认换成 24, 2026-09-16 彻底下线.)
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
