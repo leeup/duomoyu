@@ -86,19 +86,11 @@ USER_EMAIL="$(git -C "$PROJECT_ROOT" config user.email || echo 'local-update@exa
 git config user.name  "$USER_NAME"
 git config user.email "$USER_EMAIL"
 
-# 简单 index.html 方便人手浏览
-cat > index.html <<'EOF'
-<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><title>多摸鱼 · 数据</title>
-<style>body{font-family:-apple-system,sans-serif;max-width:600px;margin:48px auto;padding:0 24px;line-height:1.7;color:#1f2937}
-code{background:#f4f6f8;padding:2px 6px;border-radius:4px;font-size:13px}
-a{color:#1b98c7}h1{margin-bottom:8px}.note{color:#94a3b8;font-size:13px}</style></head><body>
-<h1>🐟 多摸鱼 · 静态数据</h1>
-<p class="note">由本地 Mac 手动推送 (manual)。GitHub Action 也会每 5 分钟自动覆盖一次。</p>
-<ul><li><a href="data.json">data.json</a> — 12 平台聚合数据</li></ul>
-</body></html>
-EOF
+# 把前端 HTML 一起带上, 让 Pages 入口直接是 多摸鱼 页面
+cp "$PROJECT_ROOT/多摸鱼.html" index.html
+cp "$PROJECT_ROOT/多摸鱼.html" 多摸鱼.html
 
-git add data.json index.html
+git add data.json index.html 多摸鱼.html
 git commit -q -m "manual: refresh from local Mac at $(date '+%Y-%m-%dT%H:%M:%S%z')"
 echo ""
 

@@ -2,6 +2,8 @@
 
 一站摸尽全网热榜的极简单文件 Web 应用,参考 [momoyu.cc](https://momoyu.cc) 复刻。
 
+**在线访问**: <https://leeup.github.io/duomoyu/> (由 GitHub Pages 托管,5 分钟自动刷新数据)
+
 打开页面 → 12 个平台热榜实时聚合,无需登录、可双击打开本地 HTML 文件就用。
 
 ## 数据源(按优先级,自动 fallback)

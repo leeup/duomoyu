@@ -6,11 +6,12 @@ on:
     - cron: '*/5 * * * *'
   # 手动触发 (点 Actions 标签 → Run workflow)
   workflow_dispatch:
-  # 改动 fetch.py 时也跑一次,验证脚本没坏
+  # 改动 fetch.py 或前端 HTML 时也跑一次, 让 Pages 立即同步
   push:
     paths:
       - 'scripts/fetch.py'
       - '.github/workflows/fetch-hotlist.yml'
+      - '多摸鱼.html'
 
 # 只允许 contents:write 提交到 gh-pages 分支
 permissions:
@@ -64,20 +65,9 @@ jobs:
         run: |
           mkdir -p _publish
           cp data.json _publish/
-          # 顺便放个简单 index.html 方便人手查看
-          cat > _publish/index.html <<'EOF'
-          <!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><title>多摸鱼 · 数据</title>
-          <style>body{font-family:-apple-system,sans-serif;max-width:600px;margin:48px auto;padding:0 24px;line-height:1.7}
-          code{background:#f4f6f8;padding:2px 6px;border-radius:4px}
-          a{color:#1b98c7}</style></head><body>
-          <h1>🐟 多摸鱼 · 静态数据</h1>
-          <p>由 GitHub Actions 每 5 分钟更新一次</p>
-          <ul>
-            <li><a href="data.json">data.json</a> — 12 个平台聚合数据 (JSON)</li>
-          </ul>
-          <p><a href="https://github.com/leeup/duomoyu">查看源码</a></p>
-          </body></html>
-          EOF
+          # 把前端 HTML 同步到 Pages: 既以 index.html 提供 / 直达, 也保留中文文件名
+          cp 多摸鱼.html _publish/index.html
+          cp 多摸鱼.html _publish/多摸鱼.html
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
