@@ -44,13 +44,24 @@ import requests
 UA = (
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/126.0 Safari/537.36"
+    "Chrome/126.0.0.0 Safari/537.36"
 )
 TIMEOUT = 15
+# 完整模仿 Chrome 的 headers - 知乎/微博/B站 这些站点会校验 Sec-Fetch-* 等字段
 HEADERS_BASE = {
     "User-Agent": UA,
-    "Accept": "application/json, text/html, */*",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
     "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "sec-ch-ua": '"Not_A Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"macOS"',
 }
 
 
@@ -59,6 +70,20 @@ def _headers(extra=None):
     if extra:
         h.update(extra)
     return h
+
+
+def _new_session(homepage_url=None, referer=None):
+    """新建一个 requests.Session, 可选先访问首页拿 cookie (针对 知乎/微博 这种要 d_c0 的)"""
+    s = requests.Session()
+    s.headers.update(HEADERS_BASE)
+    if homepage_url:
+        try:
+            s.get(homepage_url, timeout=TIMEOUT, allow_redirects=True)
+        except Exception:
+            pass  # 首页拿不到 cookie 也无所谓,继续试目标
+    if referer:
+        s.headers["Referer"] = referer
+    return s
 
 
 def _to_int(v, default=0):
@@ -123,15 +148,15 @@ def aggregator_fallback(imsyy_id, vvhan_id, direct_err=None):
 # =========================================================================
 
 def fetch_zhihu():
-    """知乎热榜 - 直连 /billboard, 失败 fallback 到 imsyy/vvhan
-       注: Azure runner IP 被风控,Mac 家庭 IP 应该能直连"""
+    """知乎热榜 - 用 session 先访问首页拿 d_c0 cookie, 再访问 /billboard
+       不带 cookie 的请求会被 403, 即使家庭 IP 也一样"""
     direct_err = None
     try:
-        r = requests.get(
-            "https://www.zhihu.com/billboard",
-            headers=_headers({"Referer": "https://www.zhihu.com/"}),
-            timeout=TIMEOUT,
-        )
+        # 先访问首页, 让 zhihu 设置 d_c0/_zap/_xsrf 等设备指纹 cookie
+        s = _new_session(homepage_url="https://www.zhihu.com/", referer="https://www.zhihu.com/")
+        # 然后请求 /billboard, headers 跟首页连贯 (Sec-Fetch-Site: same-origin)
+        s.headers["Sec-Fetch-Site"] = "same-origin"
+        r = s.get("https://www.zhihu.com/billboard", timeout=TIMEOUT)
         r.raise_for_status()
         m = re.search(r'<script id="js-initialData"[^>]*>(.*?)</script>', r.text, re.DOTALL)
         if not m:
@@ -155,16 +180,18 @@ def fetch_zhihu():
 
 
 def fetch_weibo():
-    """微博热搜 - 直连 m.weibo.cn API, 失败 fallback"""
+    """微博热搜 - session 先访问 m.weibo.cn 拿 cookie 再请求 API
+       (微博 API 不带 cookie 会重定向到登录页或返 HTML)"""
     direct_err = None
     try:
+        s = _new_session(homepage_url="https://m.weibo.cn/", referer="https://m.weibo.cn/")
+        s.headers["Sec-Fetch-Site"] = "same-origin"
+        s.headers["X-Requested-With"] = "XMLHttpRequest"
+        s.headers["MWeibo-Pwa"] = "1"
+        s.headers["Accept"] = "application/json, text/plain, */*"
         container = "106003type=25&t=3&disable_hot=1&filter_type=realtimehot"
         url = f"https://m.weibo.cn/api/container/getIndex?containerid={requests.utils.quote(container)}"
-        r = requests.get(
-            url,
-            headers=_headers({"Referer": "https://m.weibo.cn/", "MWeibo-Pwa": "1"}),
-            timeout=TIMEOUT,
-        )
+        r = s.get(url, timeout=TIMEOUT)
         r.raise_for_status()
         j = r.json()
         cards = (((j.get("data") or {}).get("cards") or [{}])[0].get("card_group")) or []
