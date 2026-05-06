@@ -329,38 +329,19 @@
       </div>
     </div>
     <div class="panel-section">
-      <h4>自定义 Worker URL（最高优先级）</h4>
-      <p style="color:var(--muted);font-size:11px;margin:0 0 8px;line-height:1.6;">
-        部署 <code>worker/worker.js</code> 到 Cloudflare Workers 后，把 URL 填这里（如 <code>https://xxx.workers.dev</code>）。前端会优先用此源,稳定独立无需第三方。
-      </p>
-      <input type="text" id="worker-url" placeholder="https://xxx.workers.dev"
-        style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--card);color:var(--text);font-size:13px;font-family:monospace">
-      <div style="margin-top:8px;display:flex;gap:6px;">
-        <button id="worker-save" class="primary" style="flex:1">保存</button>
-        <button id="worker-test">测试</button>
-        <button id="worker-clear">清除</button>
-      </div>
-      <div id="worker-status" style="margin-top:8px;font-size:11px;color:var(--muted);min-height:1.4em;"></div>
-    </div>
-    <div class="panel-section">
       <h4>关于</h4>
       <p style="color:var(--muted);font-size:12px;margin:0;line-height:1.7;">
         多摸鱼 · 聚合全网热榜的极简工具，参考 momoyu.cc 复刻。<br><br>
         <b>数据源（按优先级）：</b><br>
-        ⭐⭐ <b>GitHub Action 静态 JSON</b>（最稳,GitHub Pages 提供）<br>
-        ⭐ <b>自部署 Cloudflare Worker</b>（自带兜底链）<br>
-        ⓪ 本地代理 <code>serve.py</code><br>
+        ⭐ <b>GitHub Action 静态 JSON</b>（GH Pages 托管,5 分钟自动刷新）<br>
+        ⓪ 本地代理 <code>serve.py</code> (开发用)<br>
         ① <code>api-hot.imsyy.top</code> 直连<br>
         ② <code>api.vvhan.com</code> fetch / JSONP<br>
         ③ 内置样例数据兜底<br><br>
-        <b>部署 Worker（5 分钟）：</b>看 <code>worker/部署.md</code><br><br>
         <b>启动本地代理：</b><br>
         <code>python3 serve.py</code>（加 <code>-v</code> 看响应体预览）<br>
         然后访问 <code>http://localhost:8000/多摸鱼.html</code><br><br>
-        <b>诊断（实时数据失败时）：</b><br>
-        🩺 <code>/api/health</code> — DNS / 网络自检<br>
-        🔬 <code>/api/debug/zhihu</code> — 逐源探测,返回 HTTP 状态、耗时、错误分类、响应体预览<br><br>
-        每张卡右下角会显示具体命中的数据源（如 <code>实时 · proxy(imsyy)</code>）。
+        每张卡右下角会显示具体命中的数据源（如 <code>实时 · GH Action ⭐</code>）。
       </p>
     </div>
   </div>
@@ -616,17 +597,15 @@ const SOURCES = {
 };
 
 /* ============ State ============ */
-// 数据源优先级: GH Action JSON > Cloudflare Worker > 本地代理 > imsyy 直连 > vvhan > JSONP > mock
-// GH Action JSON: GitHub Actions 每 5 分钟跑一次 fetch.py,推到 gh-pages branch,
-//                 由 GitHub Pages 提供静态访问。优势是稳定且不依赖任何在线服务。
+// 数据源优先级: GH Action 静态 JSON > 浏览器直连 imsyy > vvhan > JSONP > mock
+// GH Action JSON: GitHub Actions 每 5 分钟跑 fetch.py,推到 gh-pages branch,
+//                 由 GitHub Pages 静态托管。是项目最稳定的数据源。
 const DEFAULT_GH_PAGES_URL = 'https://leeup.github.io/duomoyu/data.json';
-const DEFAULT_WORKER_URL = 'https://duomoyu-hotlist.duomoyu.workers.dev';
 const STATE = {
   hidden: new Set(JSON.parse(localStorage.getItem('mmy:hidden') || '[]')),
   showHot: localStorage.getItem('mmy:showHot') !== '0',
   useLive: localStorage.getItem('mmy:useLive') !== '0',
   autoRefresh: localStorage.getItem('mmy:autoRefresh') === '1',
-  workerUrl: localStorage.getItem('mmy:workerUrl') ?? DEFAULT_WORKER_URL,
   ghPagesUrl: localStorage.getItem('mmy:ghPagesUrl') ?? DEFAULT_GH_PAGES_URL,
   ghPagesData: null,        // 整个 data.json 缓存到内存,所有平台共用一次请求
   ghPagesLoadedAt: 0,       // 何时加载的, 用于"过期失效"判断
@@ -634,8 +613,9 @@ const STATE = {
   fetchedAt: {},
   liveOk: {},
 };
-// Worker 平台 id 映射 (前端用 vvhan 风格 id,Worker 用 imsyy 风格)
-const WORKER_ID_MAP = {
+// 后端平台 id 映射 (前端用 vvhan 风格 id,后端 fetch.py 用 imsyy 风格 id)
+// GH Pages JSON 里的 platforms key 跟 fetch.py 一致 (见 PLATFORMS in fetch.py)
+const BACKEND_ID_MAP = {
   zhihuHot: 'zhihu', wbHot: 'weibo', v2ex: 'v2ex', baiduRY: 'baidu',
   douyinHot: 'douyin', bili: 'bilibili', douban: 'douban', huPu: 'hupu',
   toutiao: 'toutiao', '36Ke': '36kr', itHome: 'ithome', sspai: 'sspai',
@@ -733,7 +713,7 @@ const ON_PROXY = /^https?:$/.test(location.protocol)
                  && /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 
 // ⭐⭐ 加载 GitHub Pages 上的静态 JSON (整个 data.json 一次拉,所有平台共用)
-// 这一档不会自己重试,失败就 STATE.ghPagesData 保持 null,后续平台自然走 Worker / 代理 / 直连兜底
+// 这一档不会自己重试,失败就 STATE.ghPagesData 保持 null,后续平台自然走 imsyy / vvhan / JSONP 兜底链
 async function loadGhPagesData() {
   if (!STATE.ghPagesUrl) return;
   // 5 分钟内已加载过的就不再请求 (Action 每 5 分钟更新一次,再频繁请求也没用)
@@ -759,9 +739,9 @@ async function fetchPlatform(p) {
     return (MOCK[p.id] || []).map(([title, hot]) => ({ title, url: p.src, hot }));
   }
 
-  // ⭐⭐ 最高优先级:GitHub Pages 静态 JSON (Action 每 5 分钟更新)
+  // ⭐ 最高优先级:GitHub Pages 静态 JSON (Action 每 5 分钟更新)
   if (STATE.ghPagesData?.platforms) {
-    const ghId = WORKER_ID_MAP[p.id] || p.id;
+    const ghId = BACKEND_ID_MAP[p.id] || p.id;
     const entry = STATE.ghPagesData.platforms[ghId];
     if (entry?.items?.length) {
       STATE.liveOk[p.id] = 'gh-action';
@@ -776,25 +756,6 @@ async function fetchPlatform(p) {
         hot: parseHot(it.hot ?? it.heat ?? it.score),
       })).filter(x => x.title);
     }
-  }
-
-  // ⭐ 第二优先级:用户自部署的 Cloudflare Worker
-  if (STATE.workerUrl) {
-    const workerId = WORKER_ID_MAP[p.id] || p.id;
-    try {
-      const url = STATE.workerUrl.replace(/\/+$/, '') + '/api/' + workerId;
-      const r = await fetchTimeout(url, 9000);
-      if (r.ok) {
-        const j = await r.json();
-        if (j && Array.isArray(j.data) && j.data.length) {
-          STATE.liveOk[p.id] = 'worker';
-          return j.data.slice(0, 15).map(it => ({
-            title: it.title, url: it.url || p.src,
-            hot: parseHot(it.hot ?? it.heat ?? it.score),
-          })).filter(x => x.title);
-        }
-      }
-    } catch (e) { console.warn(`[${p.id}] worker failed:`, e.message); }
   }
 
   // ⓪ 本地代理 /api/auto/* (serve.py)
@@ -904,8 +865,7 @@ function renderCard(p) {
   `).join('') || '<li style="padding:24px 16px;color:var(--muted);text-align:center">暂无数据</li>';
   time.textContent = '更新于 ' + fmtTime(STATE.fetchedAt[p.id]);
   const ok = STATE.liveOk[p.id];
-  src.textContent = ok === 'gh-action' ? '实时 · GH Action ⭐⭐'
-                   : ok === 'worker' ? '实时 · Worker ⭐'
+  src.textContent = ok === 'gh-action' ? '实时 · GH Action ⭐'
                    : (typeof ok === 'string' && ok.startsWith('proxy')) ? `实时 · ${ok}`
                    : ok === 'imsyy' ? '实时 · imsyy'
                    : ok === 'vvhan' ? '实时 · vvhan'
@@ -924,7 +884,7 @@ async function loadAndRender(p, isManual = false) {
   try {
     STATE.data[p.id] = await fetchPlatform(p);
     // GH Pages 路径里已经把 fetchedAt 设成上游真实抓取时间, 这里别覆盖;
-    // 其他路径 (Worker / 直连 / 代理 / mock) 都是"即时"拿到的, 用现在
+    // 其他路径 (代理 / 直连 / mock) 都是"即时"拿到的, 用现在
     if (STATE.liveOk[p.id] !== 'gh-action') {
       STATE.fetchedAt[p.id] = Date.now();
     }
@@ -991,54 +951,6 @@ function buildPanel() {
   $('#auto-refresh').checked = STATE.autoRefresh;
   $('#show-hot').checked = STATE.showHot;
   $('#use-live').checked = STATE.useLive;
-  $('#worker-url').value = STATE.workerUrl;
-  if (!STATE.workerUrl) {
-    $('#worker-status').textContent = '未配置 (将走代理 / 直连 / 样例 兜底链)';
-  } else if (STATE.workerUrl === DEFAULT_WORKER_URL) {
-    $('#worker-status').textContent = `当前: ${STATE.workerUrl}  (默认)`;
-  } else {
-    $('#worker-status').textContent = `当前: ${STATE.workerUrl}  (自定义)`;
-  }
-}
-
-function bindWorkerHandlers() {
-  $('#worker-save').addEventListener('click', () => {
-    const v = $('#worker-url').value.trim().replace(/\/+$/, '');
-    STATE.workerUrl = v;
-    if (v) localStorage.setItem('mmy:workerUrl', v);
-    else localStorage.removeItem('mmy:workerUrl');
-    $('#worker-status').textContent = v ? `已保存: ${v}` : '已清除';
-    toast(v ? '已保存,正在用 Worker 重新加载' : '已清除 Worker URL');
-    renderAll();
-  });
-  $('#worker-clear').addEventListener('click', () => {
-    $('#worker-url').value = '';
-    STATE.workerUrl = '';
-    // 持久化空值,避免下次加载又被 DEFAULT_WORKER_URL 覆盖
-    localStorage.setItem('mmy:workerUrl', '');
-    $('#worker-status').textContent = '已清除 (将走代理 / 直连 / 样例 兜底链)';
-    toast('已清除 Worker URL');
-    renderAll();
-  });
-  $('#worker-test').addEventListener('click', async () => {
-    const v = $('#worker-url').value.trim().replace(/\/+$/, '');
-    if (!v) { $('#worker-status').textContent = '请先填入 Worker URL'; return; }
-    $('#worker-status').textContent = '测试中…';
-    try {
-      const t0 = Date.now();
-      const r = await fetchTimeout(v + '/api/v2ex', 9000);
-      const ms = Date.now() - t0;
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      const j = await r.json();
-      if (Array.isArray(j.data) && j.data.length) {
-        $('#worker-status').innerHTML = `<span style="color:#10b981">✓ 成功 [${ms}ms] 拿到 ${j.data.length} 条 V2EX 数据</span>`;
-      } else {
-        $('#worker-status').innerHTML = `<span style="color:#f59e0b">⚠ 响应正常但无数据,response: ${JSON.stringify(j).slice(0,100)}</span>`;
-      }
-    } catch (e) {
-      $('#worker-status').innerHTML = `<span style="color:#ef4444">✗ 失败: ${e.message}</span>`;
-    }
-  });
 }
 
 function openPanel() {
@@ -1115,13 +1027,10 @@ function init() {
     renderAll();
     toast(e.target.checked ? '已切换至实时数据' : '已切换至样例数据');
   });
-  // 绑定一次 Worker URL 相关按钮 (面板复用同一组 DOM)
-  bindWorkerHandlers();
-
   // 渲染主页面
   setStatus('正在加载……');
   // 先并行拉 GH Pages JSON (一次拿到所有平台,最稳的数据源),
-  // 拉到了 renderAll 时各卡片会优先用它;没拉到也不阻塞,渲染时会走 Worker / 兜底链
+  // 拉到了 renderAll 时各卡片会优先用它;没拉到也不阻塞,渲染时会走 imsyy / vvhan / JSONP 兜底链
   loadGhPagesData().finally(() => {
     renderAll();
     setupAutoRefresh();
@@ -1144,7 +1053,7 @@ function init() {
         const note = ghCount ? ` (其中 ${ghCount} 个来自 GH Action 静态 JSON)` : '';
         setStatus(`已加载 ${total} 个平台,${live} 个为实时数据,${total - live} 个使用样例数据兜底${note}`);
       } else {
-        const note = ghCount === total ? ' (全部来自 GH Action ⭐⭐)' : (ghCount ? ` (${ghCount} 个来自 GH Action,其余走 Worker / 直连)` : '');
+        const note = ghCount === total ? ' (全部来自 GH Action ⭐)' : (ghCount ? ` (${ghCount} 个来自 GH Action,其余走 imsyy/vvhan 兜底)` : '');
         setStatus(`✓ 已加载 ${total} 个平台,全部为实时数据${note}`);
       }
     }, 2500);
