@@ -765,6 +765,12 @@ async function fetchPlatform(p) {
     const entry = STATE.ghPagesData.platforms[ghId];
     if (entry?.items?.length) {
       STATE.liveOk[p.id] = 'gh-action';
+      // 用上游真实抓取时间, 让"X 分钟前"反映 Action 的实际抓取时刻
+      // (而不是用户打开页面的"刚刚")
+      if (entry.updated_at) {
+        const t = new Date(entry.updated_at).getTime();
+        if (Number.isFinite(t)) STATE.fetchedAt[p.id] = t;
+      }
       return entry.items.slice(0, 15).map(it => ({
         title: it.title, url: it.url || p.src,
         hot: parseHot(it.hot ?? it.heat ?? it.score),
@@ -917,7 +923,11 @@ async function loadAndRender(p, isManual = false) {
   if (refresh) refresh.classList.add('spinning');
   try {
     STATE.data[p.id] = await fetchPlatform(p);
-    STATE.fetchedAt[p.id] = Date.now();
+    // GH Pages 路径里已经把 fetchedAt 设成上游真实抓取时间, 这里别覆盖;
+    // 其他路径 (Worker / 直连 / 代理 / mock) 都是"即时"拿到的, 用现在
+    if (STATE.liveOk[p.id] !== 'gh-action') {
+      STATE.fetchedAt[p.id] = Date.now();
+    }
   } finally {
     renderCard(p);
     if (refresh) refresh.classList.remove('spinning');
