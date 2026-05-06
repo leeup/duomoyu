@@ -261,22 +261,27 @@ def fetch_douyin():
 
 
 def fetch_bilibili():
-    """B 站热门 - 排行榜端点 ranking/v2 (无需 wbi 签名)"""
+    """B 站热门 - 抓排行榜 SSR 页面, 数据嵌在 __INITIAL_STATE__ 里, 不需要 WBI 签名
+       (ranking/v2 API 现已被 B 站收编进 WBI, 412 Precondition Failed)"""
     r = requests.get(
-        "https://api.bilibili.com/x/web-interface/ranking/v2?rid=0&type=all",
+        "https://www.bilibili.com/v/popular/rank/all",
         headers=_headers({"Referer": "https://www.bilibili.com/"}),
         timeout=TIMEOUT,
     )
     r.raise_for_status()
-    j = r.json()
-    lst = (j.get("data") or {}).get("list") or []
+    m = re.search(r'window\.__INITIAL_STATE__\s*=\s*(\{.+?\})\s*;\s*\(function', r.text, re.DOTALL)
+    if not m:
+        raise RuntimeError("bilibili: __INITIAL_STATE__ not found in ranking HTML")
+    j = json.loads(m.group(1))
+    # 字段位置可能是 rankList / list / allList, 看 B 站当前页面
+    lst = j.get("rankList") or j.get("list") or j.get("allList") or ((j.get("data") or {}).get("list")) or []
     if not lst:
-        raise RuntimeError("bilibili: empty list (likely wbi rejection)")
+        raise RuntimeError("bilibili: empty rankList in HTML")
     return [
         {
             "title": it.get("title", ""),
-            "url": it.get("short_link_v2") or f"https://www.bilibili.com/video/{it.get('bvid', '')}",
-            "hot": _to_int((it.get("stat") or {}).get("view")),
+            "url": it.get("short_link_v2") or it.get("short_link") or f"https://www.bilibili.com/video/{it.get('bvid', '')}",
+            "hot": _to_int((it.get("stat") or {}).get("view") or it.get("view")),
         }
         for it in lst[:20]
         if it.get("title")

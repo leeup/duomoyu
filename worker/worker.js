@@ -206,22 +206,29 @@ const PLATFORMS = {
     },
   },
 
-  /* ---------- B 站热门 (B 站全面 wbi 化,Cloudflare 出口几乎都被拦,走 imsyy) ---------- */
+  /* ---------- B 站热门 ----------
+     /x/web-interface/ranking/v2 现需 WBI 签名 (412 Precondition Failed).
+     绕过办法: 抓 SSR 页面 /v/popular/rank/all, 数据嵌在 __INITIAL_STATE__ 里,
+     不需要任何签名. 失败仍兜底 imsyy. */
   bilibili: {
     name: 'B 站热门',
     fetch: async () => {
       try {
-        const j = await fetchJson(
-          'https://api.bilibili.com/x/web-interface/ranking/v2?rid=0&type=all',
-          { headers: { 'Referer': 'https://www.bilibili.com/' } },
-        );
-        const list = j?.data?.list || [];
-        if (!list.length) throw new Error('bilibili: empty ranking list');
+        const html = await fetchText('https://www.bilibili.com/v/popular/rank/all', {
+          headers: { 'Referer': 'https://www.bilibili.com/' },
+        });
+        // 形如: window.__INITIAL_STATE__={...};(function(){...})()
+        const m = html.match(/window\.__INITIAL_STATE__\s*=\s*({[\s\S]+?})\s*;\s*\(function/);
+        if (!m) throw new Error('bilibili: __INITIAL_STATE__ not found in ranking HTML');
+        const j = JSON.parse(m[1]);
+        // 数据可能在 rankList / list / allList 之一, 看 B 站当前页面结构
+        const list = j?.rankList || j?.list || j?.allList || j?.data?.list || [];
+        if (!list.length) throw new Error('bilibili: empty rankList in HTML');
         return list.slice(0, 20).map(it => ({
-          title: it.title,
-          url:   it.short_link_v2 || `https://www.bilibili.com/video/${it.bvid}`,
-          hot:   it.stat?.view || 0,
-        }));
+          title: it.title || '',
+          url:   it.short_link_v2 || it.short_link || `https://www.bilibili.com/video/${it.bvid || ''}`,
+          hot:   parseInt(it.stat?.view || it.view || 0) || 0,
+        })).filter(x => x.title);
       } catch (e) {
         return aggregatorFallback('bilibili', 'bili', e.message);
       }
