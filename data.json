@@ -1,0 +1,304 @@
+{
+  "platforms": {
+    "v2ex": {
+      "name": "V2EX 热门",
+      "updated_at": "2026-10-31T20:30:02Z",
+      "items": [
+        {
+          "title": "求助： 10GB 音乐文件如何高速分享给好友？网盘限速、微信限大小， NAS 也受运营商上行限制",
+          "url": "https://www.v2ex.com/t/1253376",
+          "hot": 90
+        },
+        {
+          "title": "现在教育真的太卷了，一年级上学期期中测验趣事",
+          "url": "https://www.v2ex.com/t/1253357",
+          "hot": 45
+        },
+        {
+          "title": "台湾 Claude 号生意有搞头吗",
+          "url": "https://www.v2ex.com/t/1253348",
+          "hot": 34
+        },
+        {
+          "title": "claude 似乎 今天对 pro 和 free 用户执行 ID verification 了",
+          "url": "https://www.v2ex.com/t/1253347",
+          "hot": 33
+        },
+        {
+          "title": "大家目前被封禁了几个 Claude 账户？",
+          "url": "https://www.v2ex.com/t/1253335",
+          "hot": 32
+        },
+        {
+          "title": "[送码两天] Emby/Plex/NAS 视频播放器 Vidzer v1.2.0 发布，首次支持安卓，还支持 macOS 和 Windows",
+          "url": "https://www.v2ex.com/t/1253453",
+          "hot": 31
+        },
+        {
+          "title": "大家用 obsidian 么，用什么路线同步的。",
+          "url": "https://www.v2ex.com/t/1253421",
+          "hot": 29
+        },
+        {
+          "title": "[补送码] Navidrome 最佳播放器： Mu3ic",
+          "url": "https://www.v2ex.com/t/1253338",
+          "hot": 25
+        }
+      ]
+    },
+    "hupu": {
+      "name": "虎扑步行街",
+      "updated_at": null,
+      "items": [],
+      "error": "RuntimeError: all sources failed [hupu/huPu] | imsyy: ConnectionError: HTTPSConnectionPool(host='api-hot.imsyy.top', port=443): Max retries exceeded with url: /hupu (Caused by NameResolutionError(\"HTTPSConnection(host='api-hot.imsyy.top', port=443): Failed to resolve 'api-hot.imsyy.top' ([Errno -5] No address associated with hostname)\")) | vvhan: ConnectionError: HTTPSConnectionPool(host='api.vvhan.com', port=443): Max retries exceeded with url: /api/hotlist?type=huPu (Caused by NameResolutionError(\"HTTPSConnection(host='api.vvhan.com', port=443): Failed to resolve 'api.vvhan.com' ([Errno -2] Name or service not known)\"))"
+    },
+    "douyin": {
+      "name": "抖音热点",
+      "updated_at": null,
+      "items": [],
+      "error": "RuntimeError: all sources failed [douyin/douyinHot] | imsyy: ConnectionError: HTTPSConnectionPool(host='api-hot.imsyy.top', port=443): Max retries exceeded with url: /douyin (Caused by NameResolutionError(\"HTTPSConnection(host='api-hot.imsyy.top', port=443): Failed to resolve 'api-hot.imsyy.top' ([Errno -5] No address associated with hostname)\")) | vvhan: ConnectionError: HTTPSConnectionPool(host='api.vvhan.com', port=443): Max retries exceeded with url: /api/hotlist?type=douyinHot (Caused by NameResolutionError(\"HTTPSConnection(host='api.vvhan.com', port=443): Failed to resolve 'api.vvhan.com' ([Errno -2] Name or service not known)\"))"
+    },
+    "bilibili": {
+      "name": "B 站热门",
+      "updated_at": null,
+      "items": [],
+      "error": "RuntimeError: bilibili: __INITIAL_STATE__ not found in ranking HTML"
+    },
+    "toutiao": {
+      "name": "今日头条",
+      "updated_at": null,
+      "items": [],
+      "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+    },
+    "36kr": {
+      "name": "36 氪热榜",
+      "updated_at": "2026-10-31T20:30:10Z",
+      "items": [
+        {
+          "title": "刚刚，国行 Apple 智能官宣，但满血 SiriAI 还得等",
+          "url": "https://www.36kr.com/p/4049055297436164",
+          "hot": 25202
+        },
+        {
+          "title": "拆解顶级高手的产出法则：工作不是马拉松，而是一场场蓄谋已久的短跑冲刺",
+          "url": "https://www.36kr.com/p/4022650519949184",
+          "hot": 25171
+        },
+        {
+          "title": "Claude套餐大升级！Max 20x 升级为 Ultra，5 小时限额直接取消",
+          "url": "https://www.36kr.com/p/4049021975886084",
+          "hot": 17594
+        },
+        {
+          "title": "DeepSeek，怎么就变成了一条「大肥鱼」",
+          "url": "https://www.36kr.com/p/4048457242835463",
+          "hot": 16447
+        },
+        {
+          "title": "9点1氪丨币安遭黑客攻击，致其30亿美元资产被冻结；“张雪机车”商标回归张雪；美股收盘纳指重挫700点，英伟达市值蒸发1.4万亿元",
+          "url": "https://www.36kr.com/p/4049089058126344",
+          "hot": 14514
+        },
+        {
+          "title": "上亿独居年轻人，为什么诞生不了一门“大生意”",
+          "url": "https://www.36kr.com/p/4049158760479234",
+          "hot": 14214
+        },
+        {
+          "title": "芯片的大买主们，快没钱了？",
+          "url": "https://www.36kr.com/p/4049210811103496",
+          "hot": 9324
+        },
+        {
+          "title": "白酒，终于等到拐点了？",
+          "url": "https://www.36kr.com/p/4049487143097481",
+          "hot": 9278
+        },
+        {
+          "title": "奥特曼：PC上装内存太浪费，最好留给AI数据中心",
+          "url": "https://www.36kr.com/p/4049467472493065",
+          "hot": 7823
+        },
+        {
+          "title": "把全网吓一跳的“红果时间”，揭开普通人的时间贫困",
+          "url": "https://www.36kr.com/p/4049428208974339",
+          "hot": 7776
+        },
+        {
+          "title": "和华为“分手”后，赛力斯又亏了",
+          "url": "https://www.36kr.com/p/4049229661256192",
+          "hot": 7353
+        },
+        {
+          "title": "“黄牛退场”，不是泡泡玛特最大的问题",
+          "url": "https://www.36kr.com/p/4049458914252680",
+          "hot": 6483
+        },
+        {
+          "title": "“花钱的没座，白蹭的坐一天？”于东来公开支持“消费入座”",
+          "url": "https://www.36kr.com/p/4049113865451784",
+          "hot": 5682
+        },
+        {
+          "title": "AI 混进学术圈，人类第一反应是“叫家长”",
+          "url": "https://www.36kr.com/p/4049275928106881",
+          "hot": 5143
+        },
+        {
+          "title": "在卖人设和护隐私之间，黄子韬究竟赚了多少？",
+          "url": "https://www.36kr.com/p/4049058257697025",
+          "hot": 4812
+        },
+        {
+          "title": "申请退款时，你会威胁、骗人、信息轰炸吗？你的AI可能比你更会……",
+          "url": "https://www.36kr.com/p/4048971380685316",
+          "hot": 4696
+        },
+        {
+          "title": "电科金仓发布KES AI数据库",
+          "url": "https://www.36kr.com/p/4049722853545097",
+          "hot": 3241
+        }
+      ]
+    },
+    "sspai": {
+      "name": "少数派",
+      "updated_at": "2026-10-31T20:30:12Z",
+      "items": [
+        {
+          "title": "备受期待的国产 3A 游戏新作：《影之刃零》游玩体验",
+          "url": "https://sspai.com/post/117725",
+          "hot": 28
+        },
+        {
+          "title": "断舍离只是起点：打造能长期经营的实用主义衣柜",
+          "url": "https://sspai.com/post/116990",
+          "hot": 53
+        },
+        {
+          "title": "社区速递 163 | 金豪 59 调整版钢笔与九月派友剁手清单",
+          "url": "https://sspai.com/post/117633",
+          "hot": 16
+        },
+        {
+          "title": "Apple Sports：不看新闻、不聊球，只看我关心的比赛",
+          "url": "https://sspai.com/post/117557",
+          "hot": 18
+        },
+        {
+          "title": "派评 | 近期值得关注的 App",
+          "url": "https://sspai.com/post/117529",
+          "hot": 25
+        },
+        {
+          "title": "秋冬换季护肤买什么，双 11 选购推荐",
+          "url": "https://sspai.com/post/117414",
+          "hot": 46
+        },
+        {
+          "title": "少数派×红树林基金会｜候鸟季公益直播，邀你共护湿地",
+          "url": "https://sspai.com/post/117180",
+          "hot": 27
+        },
+        {
+          "title": "本周看什么 | 最近值得一看的 12 部作品",
+          "url": "https://sspai.com/post/117169",
+          "hot": 15
+        },
+        {
+          "title": "TDS REVIEW｜OPPO Enco X4 降噪真无线耳机体验",
+          "url": "https://sspai.com/post/116398",
+          "hot": 10
+        },
+        {
+          "title": "前瞻｜Apple 新品看点：MacBook 或将推出 OLED 触屏版本",
+          "url": "https://sspai.com/post/116923",
+          "hot": 10
+        },
+        {
+          "title": "破与立：设计视角下的 iPhone Duo",
+          "url": "https://sspai.com/post/116979",
+          "hot": 32
+        },
+        {
+          "title": "社区速递 162 | MUJI 靠垫、中兴路由器与派友们的长假吃灰装备",
+          "url": "https://sspai.com/post/116820",
+          "hot": 13
+        },
+        {
+          "title": "Vitals：什么在拖慢你的 Mac？它比「活动监视器」更直观易用",
+          "url": "https://sspai.com/post/116445",
+          "hot": 17
+        },
+        {
+          "title": "TDS REVIEW｜vivo Buds Clip 耳夹式无线耳机体验",
+          "url": "https://sspai.com/post/115475",
+          "hot": 13
+        },
+        {
+          "title": "App+1 | 紫毫：基于 Rime 引擎、支持双拼纠错的 iOS 输入法",
+          "url": "https://sspai.com/post/116430",
+          "hot": 34
+        },
+        {
+          "title": "派评 | 近期值得关注的 App",
+          "url": "https://sspai.com/post/116705",
+          "hot": 13
+        },
+        {
+          "title": "与 Tim Cook 走进「蓝盒子」，了解 Mac 如何助力中国企业成长",
+          "url": "https://sspai.com/post/116585",
+          "hot": 17
+        },
+        {
+          "title": "从「空间扩展」到「等比放大」：我如何为 MacBook Pro 搭建双屏桌面",
+          "url": "https://sspai.com/post/116661",
+          "hot": 21
+        },
+        {
+          "title": "在硅谷，遇见个人计算机历史",
+          "url": "https://sspai.com/post/116128",
+          "hot": 37
+        },
+        {
+          "title": "怀旧手记｜坚果 Pro2 与 R1：当「理想」和「现实」碰撞会发生什么？",
+          "url": "https://sspai.com/post/115533",
+          "hot": 37
+        }
+      ]
+    },
+    "zhihu": {
+      "name": "知乎热榜",
+      "updated_at": null,
+      "items": [],
+      "error": "RuntimeError: all sources failed [zhihu/zhihuHot] | direct: HTTPError: 403 Client Error: Forbidden for url: https://www.zhihu.com/billboard | imsyy: ConnectionError: HTTPSConnectionPool(host='api-hot.imsyy.top', port=443): Max retries exceeded with url: /zhihu (Caused by NameResolutionError(\"HTTPSConnection(host='api-hot.imsyy.top', port=443): Failed to resolve 'api-hot.imsyy.top' ([Errno -5] No address associated with hostname)\")) | vvhan: ConnectionError: HTTPSConnectionPool(host='api.vvhan.com', port=443): Max retries exceeded with url: /api/hotlist?type=zhihuHot (Caused by NameResolutionError(\"HTTPSConnection(host='api.vvhan.com', port=443): Failed to resolve 'api.vvhan.com' ([Errno -2] Name or service not known)\"))"
+    },
+    "douban": {
+      "name": "豆瓣热映",
+      "updated_at": null,
+      "items": [],
+      "error": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+    },
+    "baidu": {
+      "name": "百度热搜",
+      "updated_at": null,
+      "items": [],
+      "error": "RuntimeError: baidu: s-data comment not found"
+    },
+    "weibo": {
+      "name": "微博热搜",
+      "updated_at": null,
+      "items": [],
+      "error": "RuntimeError: all sources failed [weibo/wbHot] | direct: RuntimeError: weibo: empty card_group | imsyy: ConnectionError: HTTPSConnectionPool(host='api-hot.imsyy.top', port=443): Max retries exceeded with url: /weibo (Caused by NameResolutionError(\"HTTPSConnection(host='api-hot.imsyy.top', port=443): Failed to resolve 'api-hot.imsyy.top' ([Errno -5] No address associated with hostname)\")) | vvhan: ConnectionError: HTTPSConnectionPool(host='api.vvhan.com', port=443): Max retries exceeded with url: /api/hotlist?type=wbHot (Caused by NameResolutionError(\"HTTPSConnection(host='api.vvhan.com', port=443): Failed to resolve 'api.vvhan.com' ([Errno -2] Name or service not known)\"))"
+    },
+    "ithome": {
+      "name": "IT 之家",
+      "updated_at": null,
+      "items": [],
+      "error": "RuntimeError: all sources failed [ithome/itHome] | direct: RuntimeError: ithome: HTML 解析 0 条 | imsyy: ConnectionError: HTTPSConnectionPool(host='api-hot.imsyy.top', port=443): Max retries exceeded with url: /ithome (Caused by NameResolutionError(\"HTTPSConnection(host='api-hot.imsyy.top', port=443): Failed to resolve 'api-hot.imsyy.top' ([Errno -5] No address associated with hostname)\")) | vvhan: ConnectionError: HTTPSConnectionPool(host='api.vvhan.com', port=443): Max retries exceeded with url: /api/hotlist?type=itHome (Caused by NameResolutionError(\"HTTPSConnection(host='api.vvhan.com', port=443): Failed to resolve 'api.vvhan.com' ([Errno -2] Name or service not known)\"))"
+    }
+  },
+  "version": 1,
+  "updated_at": "2026-10-31T20:30:18Z",
+  "summary": "3/12 platforms fresh; 9 fell back to last-good"
+}
